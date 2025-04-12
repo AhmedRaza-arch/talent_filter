@@ -28,9 +28,9 @@
     <!-- Navbar -->
     <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
-
+            
             <!-- Logo/Brand link - always goes to home or appropriate dashboard -->
-            <a class="navbar-item" href="{% if user.is_authenticated %}{% if user.usertype.is_job_seeker %}{% url 'job_seeker_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'login' %}{% endif %}">
+            <a class="navbar-item" style="font-size: 1.6em !important;" href="{% if user.is_authenticated %}{% if user.usertype.is_job_seeker %}{% url 'job_seeker_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'login' %}{% endif %}">
                 Talent Filter
             </a>
 

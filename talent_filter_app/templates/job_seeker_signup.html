@@ -2,20 +2,57 @@
 {% load bulma_tags %}
 
 {% block content %}
-<h1 class="title">Job Seeker Registration</h1>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form|bulma }}
-    <div class="field">
-        <div class="control">
-            <button class="button is-primary" type="submit">Register</button>
+<div class="columns is-centered">
+    <div class="column is-half-tablet is-one-third-desktop">
+        <div class="card login-card">
+            <div class="card-header">
+                <p class="card-header-title is-centered">Job Seeker Registration</p>
+            </div>
+            <div class="card-content">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|bulma }}
+                    <div class="field mt-4">
+                        <div class="control">
+                            <button class="button is-primary is-fullwidth" type="submit">Register</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="card-footer-item is-flex is-flex-direction-column">
+                    <p class="mb-2">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                    <p>Are you a recruiter? <a href="{% url 'recruiter_signup' %}">Register as a Recruiter</a></p>
+                </div>
+            </div>
         </div>
     </div>
-</form>
-
-<div class="mt-4">
-    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
-    <p>Are you a recruiter? <a href="{% url 'recruiter_signup' %}">Register as a Recruiter</a></p>
 </div>
+
+<style>
+    .login-card {
+        border-radius: 8px;
+        box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.02);
+        margin-top: 2rem;
+        overflow: hidden;
+    }
+
+    .card-header-title {
+        font-size: 1.25rem;
+        background-color: var(--success);
+        color: white;
+    }
+
+    .card-content {
+        padding: 2rem;
+    }
+
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+
+    .mb-2 {
+        margin-bottom: 0.75rem;
+    }
+</style>
 {% endblock %}

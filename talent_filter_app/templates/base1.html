@@ -10,38 +10,54 @@
     <style>
         /* Custom Theme Colors for Talent Filter */
 
-        /* Primary Colors */
+        /* Purple Theme - Light Mode */
         :root {
-            --primary: #3273dc;
-            --primary-light: #4a89dc;
-            --primary-dark: #2160c4;
-            --info: #209cee;
-            --success: #23d160;
-            --warning: #ffdd57;
-            --danger: #ff3860;
-            --dark: #363636;
-            --text: #4a4a4a;
-            --background: #f5f5f5;
-            --card-background: #ffffff;
-            --footer-background: #fafafa;
-            --border-color: #dbdbdb;
+            --primary: #6a4c93;         /* Main purple */
+            --primary-light: #8a6db1;   /* Lighter purple */
+            --primary-dark: #4a2d74;    /* Darker purple */
+            --secondary: #9d65c9;       /* Secondary purple */
+            --accent: #5e35b1;          /* Accent purple */
+
+            --info: #4a9df8;           /* Blue for info */
+            --success: #48bb78;         /* Green for success */
+            --warning: #f6ad55;         /* Orange for warnings */
+            --danger: #e53e3e;          /* Red for danger/errors */
+
+            --dark: #2d3748;           /* Dark gray for text */
+            --text: #4a5568;            /* Main text color */
+            --light-text: #718096;      /* Lighter text for subtitles */
+
+            --background: #f7fafc;      /* Very light background */
+            --card-background: #ffffff; /* White card background */
+            --footer-background: #edf2f7; /* Light gray footer */
+            --border-color: #e2e8f0;    /* Light border color */
+
+            --highlight: #b794f4;       /* Purple highlight */
         }
 
-        /* Dark Theme */
+        /* Purple Theme - Dark Mode */
         .is-dark-theme {
-            --primary: #4a89dc;
-            --primary-light: #5c9ce6;
-            --primary-dark: #3d7acc;
-            --info: #3298dc;
-            --success: #48c774;
-            --warning: #ffdd57;
-            --danger: #f14668;
-            --dark: #1a1a1a;
-            --text: #f5f5f5;
-            --background: #121212;
-            --card-background: #1e1e1e;
-            --footer-background: #1a1a1a;
-            --border-color: #333333;
+            --primary: #9d65c9;         /* Brighter purple for dark mode */
+            --primary-light: #b794f4;   /* Lighter purple */
+            --primary-dark: #6a4c93;    /* Darker purple */
+            --secondary: #805ad5;       /* Secondary purple */
+            --accent: #d6bcfa;          /* Accent purple - lighter */
+
+            --info: #63b3ed;           /* Blue for info */
+            --success: #68d391;         /* Green for success */
+            --warning: #f6ad55;         /* Orange for warnings */
+            --danger: #fc8181;          /* Red for danger/errors */
+
+            --dark: #1a202c;           /* Very dark background */
+            --text: #e2e8f0;            /* Light text for dark mode */
+            --light-text: #a0aec0;      /* Slightly darker text for subtitles */
+
+            --background: #171923;      /* Dark background */
+            --card-background: #2d3748; /* Dark card background */
+            --footer-background: #1a202c; /* Very dark footer */
+            --border-color: #4a5568;    /* Darker border color */
+
+            --highlight: #d6bcfa;       /* Light purple highlight */
         }
 
         /* Apply Theme Colors */
@@ -49,6 +65,7 @@
         /* Navbar */
         .navbar.is-primary {
             background-color: var(--primary) !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .navbar.is-primary .navbar-brand > .navbar-item,
@@ -57,21 +74,80 @@
             color: #fff;
         }
 
+        .navbar-item:hover {
+            background-color: var(--primary-dark) !important;
+        }
+
         /* Buttons */
+        .button {
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
         .button.is-primary {
             background-color: var(--primary);
+            border-color: transparent;
         }
 
         .button.is-primary:hover {
             background-color: var(--primary-dark);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
         }
 
         .button.is-info {
             background-color: var(--info);
+            border-color: transparent;
+        }
+
+        .button.is-info:hover {
+            background-color: var(--secondary);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
         }
 
         .button.is-success {
             background-color: var(--success);
+            border-color: transparent;
+        }
+
+        .button.is-success:hover {
+            background-color: var(--accent);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Links */
+        a {
+            color: var(--secondary);
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--primary);
+        }
+
+        /* Card styling enhancements */
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header-title {
+            color: white;
+            font-weight: 600;
         }
 
         /* Layout */
@@ -115,6 +191,26 @@
             cursor: pointer;
             margin-right: 10px;
         }
+
+        /* Logo styling */
+        .navbar-item img {
+            max-height: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-item:hover img {
+            transform: rotate(90deg);
+        }
+
+        .navbar-brand .navbar-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -125,7 +221,8 @@
 
             <!-- Logo/Brand link - always goes to home or appropriate dashboard -->
             <a class="navbar-item" href="{% if user.is_authenticated %}{% if user.usertype.is_job_seeker %}{% url 'job_seeker_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'login' %}{% endif %}">
-                Talent Filter
+                <img src="{% static 'images/logo.svg' %}" alt="Logo" class="mr-2">
+                <span class="has-text-weight-bold is-size-4">Talent Filter</span>
             </a>
 
             <!-- Hamburger menu for mobile -->

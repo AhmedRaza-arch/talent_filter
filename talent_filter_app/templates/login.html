@@ -2,23 +2,92 @@
 {% load bulma_tags %}
 
 {% block content %}
-<h1 class="title">Login</h1>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form|bulma }}
-    <div class="field">
-        <div class="control">
-            <button class="button is-primary" type="submit">Login</button>
+<div class="columns is-centered">
+    <div class="column is-two-thirds-tablet is-half-desktop">
+        <div class="card login-card">
+            <div class="card-header">
+                <p class="card-header-title is-centered">Login to Your Account</p>
+            </div>
+            <div class="card-content">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|bulma }}
+                    <div class="field mt-4">
+                        <div class="control">
+                            <button class="button is-primary is-fullwidth" type="submit">Login</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="card-footer-item is-flex is-flex-direction-column">
+                    <p class="mb-2">Don't have an account?</p>
+                    <div class="is-flex" style="gap: 10px;">
+                        <a class="button is-info" href="{% url 'recruiter_signup' %}">Register as Recruiter</a>
+                        <a class="button is-success" href="{% url 'job_seeker_signup' %}">Register as Job Seeker</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</form>
-
-<div class="mt-4">
-    <p>Don't have an account?</p>
-    <div class="buttons">
-        <a class="button is-info" href="{% url 'recruiter_signup' %}">Register as Recruiter</a>
-        <a class="button is-success" href="{% url 'job_seeker_signup' %}">Register as Job Seeker</a>
-    </div>
 </div>
+
+<style>
+    .login-card {
+        border-radius: 8px;
+        box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.02);
+        margin-top: 2rem;
+        overflow: hidden;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .card-header-title {
+        font-size: 1.25rem;
+        background-color: var(--primary);
+        color: white;
+        padding: 1rem 1.5rem;
+    }
+
+    .card-content {
+        padding: 2rem;
+    }
+
+    /* Improve form layout for wider card */
+    .field {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Add some spacing between form elements */
+    .field:not(:last-child) {
+        margin-bottom: 1.5rem;
+    }
+
+    .is-flex {
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+
+    @media screen and (max-width: 768px) {
+        .is-flex {
+            flex-direction: column;
+        }
+
+        .is-flex .button {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+
+    .mb-2 {
+        margin-bottom: 0.75rem;
+    }
+</style>
 {% endblock %}

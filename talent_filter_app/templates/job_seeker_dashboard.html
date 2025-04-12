@@ -4,14 +4,35 @@
 {% block content %}
 <div class="container">
     <h1 class="title">Welcome, {{ user.username }}!</h1>
-    
+
+    <!-- Custom CSS for equal height cards -->
+    <style>
+        .dashboard-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard-card .card-content {
+            flex-grow: 1;
+            padding-bottom: 1.5rem;
+        }
+        .dashboard-card .title {
+            margin-bottom: 1rem;
+        }
+        .dashboard-card .progress-container {
+            margin-top: 0.5rem;
+        }
+    </style>
+
     <div class="columns is-multiline">
         <!-- Key Metrics -->
+
         <div class="column is-4">
-            <div class="card">
+            <div class="card dashboard-card">
                 <div class="card-content">
                     <p class="title is-4">Available Jobs</p>
-                    <p class="subtitle is-2">24</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">24</p>
+                    
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'available_jobs' %}" class="card-footer-item">View All</a>
@@ -19,10 +40,10 @@
             </div>
         </div>
         <div class="column is-4">
-            <div class="card">
+            <div class="card dashboard-card">
                 <div class="card-content">
                     <p class="title is-4">My Applications</p>
-                    <p class="subtitle is-2">5</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">5</p>
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'my_applications' %}" class="card-footer-item">View All</a>
@@ -30,20 +51,22 @@
             </div>
         </div>
         <div class="column is-4">
-            <div class="card">
+            <div class="card dashboard-card">
                 <div class="card-content">
                     <p class="title is-4">Profile Completion</p>
-                    <p class="subtitle is-2">75%</p>
-                    <progress class="progress is-primary" value="75" max="100">75%</progress>
+                    <p class="subtitle is-1">75%</p>
+                    <div class="progress-container">
+                        <progress class="progress is-primary" value="75" max="100">75%</progress>
+                    </div>
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'job_seeker_profile' %}" class="card-footer-item">Complete Profile</a>
                 </footer>
             </div>
         </div>
-        
+
         <!-- Recent Job Listings -->
-        <div class="column is-12">
+        <div class="column is-12" style="border:solid 1px; margin:10px; border-radius:5px;background-color:white">
             <h2 class="title is-4">Recent Job Listings</h2>
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-hoverable">
@@ -100,9 +123,9 @@
                 <a href="{% url 'available_jobs' %}" class="button is-primary">View All Jobs</a>
             </div>
         </div>
-        
+
         <!-- My Applications -->
-        <div class="column is-12">
+        <div class="column is-12" style="border:solid 1px; margin:10px; border-radius:5px;;background-color:white">
             <h2 class="title is-4">My Recent Applications</h2>
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-hoverable">
