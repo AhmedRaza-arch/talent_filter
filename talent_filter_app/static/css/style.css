@@ -1,0 +1,145 @@
+/* Main styles for Talent Filter */
+
+/* Base layout */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #fafafa;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Page structure */
+.page-content {
+    flex: 1 0 auto;
+    padding-top: 52px; /* Navbar height */
+}
+
+.section {
+    padding: 3rem 1.5rem;
+}
+
+/* Navbar styling */
+.navbar.is-primary {
+    background-color: #4a89dc !important;
+}
+
+.navbar-brand .navbar-item {
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.navbar-burger {
+    height: 3.25rem;
+}
+
+/* Footer styling */
+.footer {
+    flex-shrink: 0;
+    padding: 2rem 1.5rem;
+    background-color: #f5f5f5;
+    border-top: 1px solid #e0e0e0;
+    margin-top: auto;
+}
+
+/* Card styling */
+.login-card {
+    box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.02);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    background-color: white;
+}
+
+.box {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+}
+
+/* Hero section */
+.login-hero {
+    background-color: #e8f0fe;
+    padding: 3rem 1.5rem;
+    border-bottom: 1px solid #d0e1fd;
+}
+
+.login-hero .title {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1.125;
+}
+
+.login-hero .subtitle {
+    color: #34495e;
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.25;
+}
+
+/* Button styling */
+.button {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.button.is-primary {
+    background-color: #4a89dc;
+}
+
+.button.is-primary:hover {
+    background-color: #3d7acc;
+}
+
+.button.is-info {
+    background-color: #5bc0de;
+}
+
+.button.is-info:hover {
+    background-color: #46b8da;
+}
+
+.button.is-success {
+    background-color: #5cb85c;
+}
+
+.button.is-success:hover {
+    background-color: #4cae4c;
+}
+
+/* Form styling */
+.field {
+    margin-bottom: 1rem;
+}
+
+.control {
+    margin-bottom: 0.5rem;
+}
+
+/* Notification styling */
+.notification {
+    padding: 1.25rem 2.5rem 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.notification .delete {
+    top: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .buttons {
+        justify-content: center;
+    }
+    
+    .button {
+        margin-bottom: 0.5rem;
+    }
+}

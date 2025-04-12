@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Talent Filter{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .section {
+            flex: 1;
+        }
+        .footer {
+            margin-top: auto;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+
+            <!-- Logo/Brand link - always goes to home or appropriate dashboard -->
+            <a class="navbar-item" href="{% if user.is_authenticated %}{% if user.usertype.is_job_seeker %}{% url 'job_seeker_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'login' %}{% endif %}">
+                Talent Filter
+            </a>
+
+            <!-- Hamburger menu for mobile -->
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarMenu" class="navbar-menu">
+            <div class="navbar-start">
+                {% if user.is_authenticated %}
+                    {% if user.usertype.is_job_seeker %}
+                        <!-- Job Seeker Navigation -->
+                        <a class="navbar-item" href="{% url 'available_jobs' %}">Available Jobs</a>
+                        <a class="navbar-item" href="{% url 'my_applications' %}">My Applications</a>
+                        <a class="navbar-item" href="{% url 'job_seeker_profile' %}">My Profile</a>
+                    {% else %}
+                        <!-- Recruiter Navigation -->
+                        <a class="navbar-item" href="{% url 'job_listings' %}">Job Listings</a>
+                        <a class="navbar-item" href="{% url 'candidate_management' %}">Candidate Management</a>
+                        <a class="navbar-item" href="{% url 'ai_recommendations' %}">AI Recommendations</a>
+                        <a class="navbar-item" href="{% url 'shortlisted_candidates' %}">Shortlisted Candidates</a>
+                        <a class="navbar-item" href="{% url 'reports_analytics' %}">Reports & Analytics</a>
+                        <a class="navbar-item" href="{% url 'settings' %}">Settings</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        {% if user.is_authenticated %}
+                            <span class="navbar-item">Welcome, {{ user.username }}!</span>
+                            <a class="button is-light" href="{% url 'logout' %}">Logout</a>
+                        {% else %}
+                            <a class="button is-light" href="{% url 'login' %}">Login</a>
+                            <div class="is-hidden-mobile" style="display: inline-block; margin: 0 5px;"></div>
+                            <a class="button is-info" href="{% url 'recruiter_signup' %}">Register as Recruiter</a>
+                            <div class="is-hidden-mobile" style="display: inline-block; margin: 0 5px;"></div>
+                            <a class="button is-success" href="{% url 'job_seeker_signup' %}">Register as Job Seeker</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="section">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>© {% now "Y" %} Talent Filter. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for mobile menu toggle -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get all "navbar-burger" elements
+            const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Add a click event on each of them
+            $navbarBurgers.forEach( el => {
+                el.addEventListener('click', () => {
+                    // Get the target from the "data-target" attribute
+                    const target = el.dataset.target;
+                    const $target = document.getElementById(target);
+
+                    // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+                    el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

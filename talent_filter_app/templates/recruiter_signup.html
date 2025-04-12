@@ -1,0 +1,21 @@
+{% extends "base1.html" %}
+{% load bulma_tags %}
+
+{% block content %}
+<h1 class="title">Recruiter Registration</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form|bulma }}
+    <div class="field">
+        <div class="control">
+            <button class="button is-primary" type="submit">Register</button>
+        </div>
+    </div>
+</form>
+
+<div class="mt-4">
+    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+    <p>Are you a job seeker? <a href="{% url 'job_seeker_signup' %}">Register as a Job Seeker</a></p>
+</div>
+{% endblock %}

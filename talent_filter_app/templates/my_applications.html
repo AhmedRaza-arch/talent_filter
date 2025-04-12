@@ -1,0 +1,103 @@
+{% extends "base1.html" %}
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">My Applications</h1>
+    
+    <div class="tabs">
+        <ul>
+            <li class="is-active"><a>All Applications</a></li>
+            <li><a>Pending</a></li>
+            <li><a>Interview Scheduled</a></li>
+            <li><a>Rejected</a></li>
+            <li><a>Hired</a></li>
+        </ul>
+    </div>
+    
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Applied Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Frontend Developer</td>
+                    <td>Web Solutions Inc.</td>
+                    <td>2024-03-01</td>
+                    <td><span class="tag is-warning">Pending Review</span></td>
+                    <td>
+                        <div class="buttons are-small">
+                            <button class="button is-info">View Details</button>
+                            <button class="button is-danger">Withdraw</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Data Analyst</td>
+                    <td>Data Insights Co.</td>
+                    <td>2024-02-25</td>
+                    <td><span class="tag is-success">Interview Scheduled</span></td>
+                    <td>
+                        <div class="buttons are-small">
+                            <button class="button is-info">View Details</button>
+                            <button class="button is-danger">Withdraw</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Product Manager</td>
+                    <td>Innovative Products Inc.</td>
+                    <td>2024-02-20</td>
+                    <td><span class="tag is-danger">Rejected</span></td>
+                    <td>
+                        <div class="buttons are-small">
+                            <button class="button is-info">View Details</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Backend Developer</td>
+                    <td>Tech Innovators</td>
+                    <td>2024-02-15</td>
+                    <td><span class="tag is-info">Hired</span></td>
+                    <td>
+                        <div class="buttons are-small">
+                            <button class="button is-info">View Details</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>UI Designer</td>
+                    <td>Design Masters</td>
+                    <td>2024-02-10</td>
+                    <td><span class="tag is-warning">Pending Review</span></td>
+                    <td>
+                        <div class="buttons are-small">
+                            <button class="button is-info">View Details</button>
+                            <button class="button is-danger">Withdraw</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+        <a class="pagination-previous">Previous</a>
+        <a class="pagination-next">Next page</a>
+        <ul class="pagination-list">
+            <li><a class="pagination-link is-current" aria-label="Page 1" aria-current="page">1</a></li>
+            <li><a class="pagination-link" aria-label="Goto page 2">2</a></li>
+            <li><a class="pagination-link" aria-label="Goto page 3">3</a></li>
+        </ul>
+    </nav>
+</div>
+{% endblock %}

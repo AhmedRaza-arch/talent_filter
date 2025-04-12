@@ -1,0 +1,150 @@
+{% extends "base1.html" %}
+{% block title %}Job Seeker Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Welcome, {{ user.username }}!</h1>
+    
+    <div class="columns is-multiline">
+        <!-- Key Metrics -->
+        <div class="column is-4">
+            <div class="card">
+                <div class="card-content">
+                    <p class="title is-4">Available Jobs</p>
+                    <p class="subtitle is-2">24</p>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'available_jobs' %}" class="card-footer-item">View All</a>
+                </footer>
+            </div>
+        </div>
+        <div class="column is-4">
+            <div class="card">
+                <div class="card-content">
+                    <p class="title is-4">My Applications</p>
+                    <p class="subtitle is-2">5</p>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'my_applications' %}" class="card-footer-item">View All</a>
+                </footer>
+            </div>
+        </div>
+        <div class="column is-4">
+            <div class="card">
+                <div class="card-content">
+                    <p class="title is-4">Profile Completion</p>
+                    <p class="subtitle is-2">75%</p>
+                    <progress class="progress is-primary" value="75" max="100">75%</progress>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'job_seeker_profile' %}" class="card-footer-item">Complete Profile</a>
+                </footer>
+            </div>
+        </div>
+        
+        <!-- Recent Job Listings -->
+        <div class="column is-12">
+            <h2 class="title is-4">Recent Job Listings</h2>
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Department</th>
+                            <th>Company</th>
+                            <th>Posted Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Senior Software Engineer</td>
+                            <td>Engineering</td>
+                            <td>Tech Solutions Inc.</td>
+                            <td>2024-03-15</td>
+                            <td>
+                                <div class="buttons are-small">
+                                    <button class="button is-primary">Apply</button>
+                                    <button class="button is-info">View Details</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Marketing Manager</td>
+                            <td>Marketing</td>
+                            <td>Global Marketing Ltd.</td>
+                            <td>2024-03-10</td>
+                            <td>
+                                <div class="buttons are-small">
+                                    <button class="button is-primary">Apply</button>
+                                    <button class="button is-info">View Details</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>UX Designer</td>
+                            <td>Design</td>
+                            <td>Creative Solutions</td>
+                            <td>2024-03-08</td>
+                            <td>
+                                <div class="buttons are-small">
+                                    <button class="button is-primary">Apply</button>
+                                    <button class="button is-info">View Details</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="has-text-centered mt-4">
+                <a href="{% url 'available_jobs' %}" class="button is-primary">View All Jobs</a>
+            </div>
+        </div>
+        
+        <!-- My Applications -->
+        <div class="column is-12">
+            <h2 class="title is-4">My Recent Applications</h2>
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>Applied Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Frontend Developer</td>
+                            <td>Web Solutions Inc.</td>
+                            <td>2024-03-01</td>
+                            <td><span class="tag is-warning">Pending Review</span></td>
+                            <td>
+                                <div class="buttons are-small">
+                                    <button class="button is-info">View Details</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Data Analyst</td>
+                            <td>Data Insights Co.</td>
+                            <td>2024-02-25</td>
+                            <td><span class="tag is-success">Interview Scheduled</span></td>
+                            <td>
+                                <div class="buttons are-small">
+                                    <button class="button is-info">View Details</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="has-text-centered mt-4">
+                <a href="{% url 'my_applications' %}" class="button is-primary">View All Applications</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
