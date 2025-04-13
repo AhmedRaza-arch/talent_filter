@@ -211,6 +211,48 @@
         .mr-2 {
             margin-right: 0.5rem;
         }
+
+        /* Notification styles */
+        .navbar-item.has-dropdown .navbar-link {
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-link .tag {
+            margin-left: 0.25rem;
+            font-size: 0.7rem;
+            height: 1.25rem;
+            min-width: 1.25rem;
+            padding: 0 0.3rem;
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+
+        .navbar-dropdown {
+            max-height: 400px;
+            overflow-y: auto;
+            width: 300px;
+        }
+
+        .dropdown-header {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background-color: var(--background);
+        }
+
+        .p-2 {
+            padding: 0.5rem;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -254,6 +296,58 @@
             </div>
 
             <div class="navbar-end">
+                {% if user.is_authenticated %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">
+                        <span class="icon">
+                            <i class="fas fa-bell"></i>
+                        </span>
+                        {% if unread_notifications_count > 0 %}
+                        <span class="tag is-danger is-rounded">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                    <div class="navbar-dropdown is-right">
+                        <div class="dropdown-header">
+                            <div class="level is-mobile p-2">
+                                <div class="level-left">
+                                    <div class="level-item">
+                                        <strong>Notifications</strong>
+                                    </div>
+                                </div>
+                                <div class="level-right">
+                                    <div class="level-item">
+                                        <a href="{% url 'notifications_list' %}" class="is-size-7">View All</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="navbar-divider">
+                        {% if recent_notifications %}
+                            {% for notification in recent_notifications %}
+                                <a href="{% url 'mark_notification_read' notification.id %}" class="navbar-item notification-item {% if not notification.is_read %}has-background-light{% endif %}">
+                                    <div>
+                                        <p class="is-size-7">{{ notification.message|truncatechars:50 }}</p>
+                                        <p class="is-size-7 has-text-grey">{{ notification.created_at|timesince }} ago</p>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="navbar-item">
+                                <p class="is-size-7">No notifications</p>
+                            </div>
+                        {% endif %}
+                        <hr class="navbar-divider">
+                        <div class="navbar-item">
+                            <a href="{% url 'mark_all_read' %}" class="button is-small is-info is-fullwidth">
+                                <span class="icon is-small">
+                                    <i class="fas fa-check-double"></i>
+                                </span>
+                                <span>Mark All as Read</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="navbar-item">
                     <div class="buttons">
                         <a id="theme-toggle" class="button is-light theme-toggle" title="Toggle Dark/Light Mode">

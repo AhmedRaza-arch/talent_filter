@@ -1,0 +1,277 @@
+{% extends "base1.html" %}
+{% load bulma_tags %}
+
+{% block title %}Add New Job{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Add New Job</h1>
+    
+    <div class="card">
+        <div class="card-content">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Job Information</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.job_title|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.open_positions|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Company</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.company_name|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Location</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.city|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.state|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.country|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Employment Details</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.workplace_type|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.employment_type|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.experience_required|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Deadline</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.application_deadline|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Job Summary</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.summary|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Key Responsibilities</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.key_responsibilities|bulma }}
+                            </p>
+                            <p class="help">Enter each responsibility on a new line</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Requirements</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.requirements|bulma }}
+                            </p>
+                            <p class="help">Enter each requirement on a new line</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Nice to Have</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.nice_to_have|bulma }}
+                            </p>
+                            <p class="help">Enter each nice-to-have on a new line</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Skills Required</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.skills_required|bulma }}
+                            </p>
+                            <p class="help">Enter each skill on a new line</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Recruiter Information</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.recruiter_name|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.recruiter_position|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Contact Information</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.recruiter_email|bulma }}
+                            </p>
+                        </div>
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.recruiter_linkedin|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">Application Details</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.application_link|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">How to Apply</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.how_to_apply|bulma }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label is-normal">
+                        <label class="label">External Portals</label>
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <p class="control is-expanded">
+                                {{ form.external_portals|bulma }}
+                            </p>
+                            <p class="help">Enter each portal on a new line (e.g., LinkedIn, Indeed, Naukri)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="field is-horizontal">
+                    <div class="field-label">
+                        <!-- Left empty for spacing -->
+                    </div>
+                    <div class="field-body">
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-primary">
+                                    <span class="icon">
+                                        <i class="fas fa-save"></i>
+                                    </span>
+                                    <span>Save Job</span>
+                                </button>
+                                <a href="{% url 'job_listings' %}" class="button">
+                                    <span class="icon">
+                                        <i class="fas fa-times"></i>
+                                    </span>
+                                    <span>Cancel</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

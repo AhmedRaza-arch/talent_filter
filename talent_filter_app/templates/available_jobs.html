@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container">
     <h1 class="title">Available Jobs</h1>
-    
+
     <div class="columns">
         <div class="column is-3">
             <div class="card">
@@ -12,161 +12,128 @@
                     <p class="card-header-title">Filter Jobs</p>
                 </div>
                 <div class="card-content">
-                    <div class="field">
-                        <label class="label">Department</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select>
-                                    <option value="">All Departments</option>
-                                    <option value="engineering">Engineering</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="design">Design</option>
-                                    <option value="sales">Sales</option>
-                                    <option value="hr">Human Resources</option>
-                                </select>
+                    <form method="get" action="{% url 'available_jobs' %}">
+                        <div class="field">
+                            <label class="label">Experience Level</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select name="experience">
+                                        <option value="">Any Experience</option>
+                                        <option value="0-2" {% if filters.experience == '0-2' %}selected{% endif %}>Entry Level (0-2 years)</option>
+                                        <option value="3-5" {% if filters.experience == '3-5' %}selected{% endif %}>Mid Level (3-5 years)</option>
+                                        <option value="5+" {% if filters.experience == '5+' %}selected{% endif %}>Senior Level (5+ years)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="field">
-                        <label class="label">Experience Level</label>
-                        <div class="control">
-                            <div class="select is-fullwidth">
-                                <select>
-                                    <option value="">Any Experience</option>
-                                    <option value="entry">Entry Level (0-2 years)</option>
-                                    <option value="mid">Mid Level (3-5 years)</option>
-                                    <option value="senior">Senior Level (5+ years)</option>
-                                </select>
+
+                        <div class="field">
+                            <label class="label">Employment Type</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select name="employment_type">
+                                        <option value="">Any Type</option>
+                                        {% for type in employment_types %}
+                                        <option value="{{ type }}" {% if filters.employment_type == type %}selected{% endif %}>{{ type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="field">
-                        <label class="label">Location</label>
-                        <div class="control">
-                            <input class="input" type="text" placeholder="Enter location">
+
+                        <div class="field">
+                            <label class="label">Workplace Type</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select name="workplace_type">
+                                        <option value="">Any Workplace</option>
+                                        {% for type in workplace_types %}
+                                        <option value="{{ type }}" {% if filters.workplace_type == type %}selected{% endif %}>{{ type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="field">
-                        <div class="control">
-                            <button class="button is-primary is-fullwidth">Apply Filters</button>
+
+                        <div class="field">
+                            <label class="label">Location</label>
+                            <div class="control">
+                                <input class="input" type="text" name="location" placeholder="Enter location" value="{{ filters.location }}">
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-primary is-fullwidth">Apply Filters</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-        
+
         <div class="column is-9">
-            <div class="field has-addons">
-                <div class="control is-expanded">
-                    <input class="input" type="text" placeholder="Search for jobs">
+            <form method="get" action="{% url 'available_jobs' %}">
+                <div class="field has-addons">
+                    <div class="control is-expanded">
+                        <input class="input" type="text" name="search" placeholder="Search for jobs" value="{{ filters.search }}">
+                    </div>
+                    <div class="control">
+                        <button type="submit" class="button is-info">Search</button>
+                    </div>
                 </div>
-                <div class="control">
-                    <button class="button is-info">Search</button>
-                </div>
-            </div>
-            
+            </form>
+
             <div class="job-listings">
-                <!-- Job Card 1 -->
-                <div class="card mb-4">
-                    <div class="card-content">
-                        <div class="columns">
-                            <div class="column is-8">
-                                <p class="title is-4">Senior Software Engineer</p>
-                                <p class="subtitle is-6">Tech Solutions Inc.</p>
-                                <div class="tags">
-                                    <span class="tag is-info">Engineering</span>
-                                    <span class="tag is-success">Full-time</span>
-                                    <span class="tag">Remote</span>
+                {% if jobs %}
+                    {% for job in jobs %}
+                    <div class="card mb-4">
+                        <div class="card-content">
+                            <div class="columns">
+                                <div class="column is-8">
+                                    <p class="title is-4">{{ job.job_title }}</p>
+                                    <p class="subtitle is-6">{{ job.company.name }}</p>
+                                    <div class="tags">
+                                        <span class="tag is-info">{{ job.employment_type }}</span>
+                                        <span class="tag is-success">{{ job.workplace_type }}</span>
+                                        <span class="tag">{{ job.company.location.city }}, {{ job.company.location.country }}</span>
+                                    </div>
+                                    <div class="content">
+                                        <p>{{ job.summary }}</p>
+                                        <p><strong>Experience:</strong> {{ job.experience_required }}</p>
+                                        <p><strong>Location:</strong> {{ job.company.location.city }}, {{ job.company.location.state }}, {{ job.company.location.country }}</p>
+                                        <p><strong>Posted:</strong> {{ job.posted_date }}</p>
+                                    </div>
                                 </div>
-                                <div class="content">
-                                    <p>We are looking for a Senior Software Engineer to join our team. The ideal candidate will have experience with Python, Django, and React.</p>
-                                    <p><strong>Experience:</strong> 5+ years</p>
-                                    <p><strong>Location:</strong> Remote (US-based)</p>
-                                    <p><strong>Posted:</strong> March 15, 2024</p>
-                                </div>
-                            </div>
-                            <div class="column is-4 has-text-right">
-                                <div class="buttons is-right">
-                                    <button class="button is-primary">Apply Now</button>
-                                    <button class="button is-info is-light">Save Job</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Job Card 2 -->
-                <div class="card mb-4">
-                    <div class="card-content">
-                        <div class="columns">
-                            <div class="column is-8">
-                                <p class="title is-4">Marketing Manager</p>
-                                <p class="subtitle is-6">Global Marketing Ltd.</p>
-                                <div class="tags">
-                                    <span class="tag is-info">Marketing</span>
-                                    <span class="tag is-success">Full-time</span>
-                                    <span class="tag">New York, NY</span>
-                                </div>
-                                <div class="content">
-                                    <p>We are seeking a Marketing Manager to lead our marketing efforts. The ideal candidate will have experience with digital marketing, content strategy, and team management.</p>
-                                    <p><strong>Experience:</strong> 3-5 years</p>
-                                    <p><strong>Location:</strong> New York, NY</p>
-                                    <p><strong>Posted:</strong> March 10, 2024</p>
-                                </div>
-                            </div>
-                            <div class="column is-4 has-text-right">
-                                <div class="buttons is-right">
-                                    <button class="button is-primary">Apply Now</button>
-                                    <button class="button is-info is-light">Save Job</button>
+                                <div class="column is-4 has-text-right">
+                                    <div class="buttons is-right">
+                                        <a href="{% url 'view_job' job.id %}" class="button is-primary">View Details</a>
+                                        <a href="{% url 'apply_to_job' job.id %}" class="button is-info is-light">Apply Now</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Job Card 3 -->
-                <div class="card mb-4">
-                    <div class="card-content">
-                        <div class="columns">
-                            <div class="column is-8">
-                                <p class="title is-4">UX Designer</p>
-                                <p class="subtitle is-6">Creative Solutions</p>
-                                <div class="tags">
-                                    <span class="tag is-info">Design</span>
-                                    <span class="tag is-success">Full-time</span>
-                                    <span class="tag">San Francisco, CA</span>
-                                </div>
-                                <div class="content">
-                                    <p>We are looking for a UX Designer to create amazing user experiences. The ideal candidate will have experience with user research, wireframing, and prototyping.</p>
-                                    <p><strong>Experience:</strong> 2-4 years</p>
-                                    <p><strong>Location:</strong> San Francisco, CA</p>
-                                    <p><strong>Posted:</strong> March 8, 2024</p>
-                                </div>
-                            </div>
-                            <div class="column is-4 has-text-right">
-                                <div class="buttons is-right">
-                                    <button class="button is-primary">Apply Now</button>
-                                    <button class="button is-info is-light">Save Job</button>
-                                </div>
-                            </div>
-                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="notification is-info">
+                        <p>No jobs found matching your criteria. Try adjusting your filters.</p>
                     </div>
-                </div>
+                {% endif %}
             </div>
-            
+
+            {% if jobs %}
             <!-- Pagination -->
             <nav class="pagination is-centered" role="navigation" aria-label="pagination">
-                <a class="pagination-previous">Previous</a>
-                <a class="pagination-next">Next page</a>
+                <a class="pagination-previous" {% if jobs.has_previous %}href="?page={{ jobs.previous_page_number }}{% for key, value in filters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"{% else %}disabled{% endif %}>Previous</a>
+                <a class="pagination-next" {% if jobs.has_next %}href="?page={{ jobs.next_page_number }}{% for key, value in filters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"{% else %}disabled{% endif %}>Next page</a>
                 <ul class="pagination-list">
-                    <li><a class="pagination-link is-current" aria-label="Page 1" aria-current="page">1</a></li>
-                    <li><a class="pagination-link" aria-label="Goto page 2">2</a></li>
-                    <li><a class="pagination-link" aria-label="Goto page 3">3</a></li>
+                    {% for i in jobs.paginator.page_range %}
+                    <li><a class="pagination-link {% if jobs.number == i %}is-current{% endif %}" aria-label="Page {{ i }}" {% if jobs.number != i %}href="?page={{ i }}{% for key, value in filters.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"{% endif %}>{{ i }}</a></li>
+                    {% endfor %}
                 </ul>
             </nav>
+            {% endif %}
         </div>
     </div>
 </div>

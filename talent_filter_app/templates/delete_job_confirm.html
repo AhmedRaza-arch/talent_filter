@@ -1,0 +1,41 @@
+{% extends "base1.html" %}
+{% block title %}Delete Job{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="columns is-centered">
+        <div class="column is-half">
+            <div class="card">
+                <div class="card-header">
+                    <p class="card-header-title">Confirm Deletion</p>
+                </div>
+                <div class="card-content">
+                    <div class="content">
+                        <p>Are you sure you want to delete the job <strong>{{ job.job_title }}</strong>?</p>
+                        <p>This action cannot be undone.</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form method="post" class="card-footer-item">
+                        {% csrf_token %}
+                        <button type="submit" class="button is-danger">
+                            <span class="icon">
+                                <i class="fas fa-trash"></i>
+                            </span>
+                            <span>Delete</span>
+                        </button>
+                    </form>
+                    <a href="{% url 'job_listings' %}" class="card-footer-item">
+                        <button class="button">
+                            <span class="icon">
+                                <i class="fas fa-times"></i>
+                            </span>
+                            <span>Cancel</span>
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

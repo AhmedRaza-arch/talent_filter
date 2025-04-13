@@ -1,5 +1,175 @@
 {% extends "base1.html" %}
+{% block title %}Job Listings{% endblock %}
+
 {% block content %}
-<h1 class="title">Job Listings</h1>
-<!-- Add job listings content here -->
+<div class="container">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <h1 class="title">Job Listings</h1>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="level-item">
+                <a href="{% url 'add_job' %}" class="button is-primary">
+                    <span class="icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>Add New Job</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="field has-addons mb-4">
+        <div class="control is-expanded">
+            <input class="input" type="text" placeholder="Search jobs...">
+        </div>
+        <div class="control">
+            <button class="button is-info">Search</button>
+        </div>
+    </div>
+
+    {% if jobs %}
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Posted Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.job_title }}</td>
+                    <td>{{ job.company.name }}</td>
+                    <td>{{ job.company.location.city }}, {{ job.company.location.country }}</td>
+                    <td>{{ job.employment_type }}</td>
+                    <td>{{ job.posted_date }}</td>
+                    <td>
+                        <div class="dropdown is-hoverable">
+                            <div class="dropdown-trigger">
+                                <span class="tag {% if job.status == 'Open' %}is-success{% else %}is-danger{% endif %}" aria-haspopup="true" aria-controls="dropdown-menu-{{ job.id }}">
+                                    {{ job.status }} <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                                </span>
+                            </div>
+                            <div class="dropdown-menu" id="dropdown-menu-{{ job.id }}" role="menu">
+                                <div class="dropdown-content">
+                                    <a href="#" class="dropdown-item status-option" data-status="Open" data-job-id="{{ job.id }}">
+                                        Open
+                                    </a>
+                                    <a href="#" class="dropdown-item status-option" data-status="Closed" data-job-id="{{ job.id }}">
+                                        Closed
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="buttons are-small">
+                            <a href="{% url 'edit_job' job.id %}" class="button is-info">
+                                <span class="icon">
+                                    <i class="fas fa-edit"></i>
+                                </span>
+                            </a>
+                            <a href="{% url 'view_job' job.id %}" class="button is-primary">
+                                <span class="icon">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </a>
+                            <a href="{% url 'delete_job' job.id %}" class="button is-danger">
+                                <span class="icon">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="notification is-info">
+        <p>You haven't posted any jobs yet. Click the "Add New Job" button to get started.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for updating job status -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Job status update
+        const statusOptions = document.querySelectorAll('.status-option');
+        statusOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const status = this.dataset.status;
+                const jobId = this.dataset.jobId;
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('status', status);
+
+                // Send AJAX request
+                fetch(`/job-listings/${jobId}/update-status/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update the UI
+                        const statusTag = document.querySelector(`#dropdown-menu-${jobId}`).previousElementSibling.querySelector('.tag');
+                        statusTag.innerHTML = status + ' <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>';
+
+                        // Update the tag color
+                        if (status === 'Open') {
+                            statusTag.classList.remove('is-danger');
+                            statusTag.classList.add('is-success');
+                        } else {
+                            statusTag.classList.remove('is-success');
+                            statusTag.classList.add('is-danger');
+                        }
+
+                        // Show success message
+                        alert(data.message);
+                    } else {
+                        // Show error message
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the job status.');
+                });
+            });
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
 {% endblock %}

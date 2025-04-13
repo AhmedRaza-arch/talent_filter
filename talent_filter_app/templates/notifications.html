@@ -1,0 +1,95 @@
+{% extends "base1.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <h1 class="title">Notifications</h1>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="level-item">
+                <a href="{% url 'mark_all_read' %}" class="button is-info">
+                    <span class="icon">
+                        <i class="fas fa-check-double"></i>
+                    </span>
+                    <span>Mark All as Read</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if notifications %}
+        <div class="notification-list">
+            {% for notification in notifications %}
+                <div class="card mb-3 {% if not notification.is_read %}has-background-light{% endif %}">
+                    <div class="card-content">
+                        <div class="columns is-vcentered">
+                            <div class="column is-1">
+                                <span class="icon is-large">
+                                    {% if notification.notification_type == 'application' %}
+                                        <i class="fas fa-file-alt fa-2x has-text-info"></i>
+                                    {% elif notification.notification_type == 'message' %}
+                                        <i class="fas fa-envelope fa-2x has-text-success"></i>
+                                    {% elif notification.notification_type == 'interview' %}
+                                        <i class="fas fa-calendar-check fa-2x has-text-warning"></i>
+                                    {% elif notification.notification_type == 'job' %}
+                                        <i class="fas fa-briefcase fa-2x has-text-primary"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell fa-2x has-text-grey"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="column is-8">
+                                <p class="is-size-5 mb-2">{{ notification.message }}</p>
+                                <p class="is-size-7 has-text-grey">
+                                    {{ notification.created_at|date:"F j, Y, g:i a" }}
+                                    {% if notification.sender %}
+                                        from {{ notification.sender.username }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="column is-3 has-text-right">
+                                <div class="buttons is-right">
+                                    {% if not notification.is_read %}
+                                        <a href="{% url 'mark_notification_read' notification.id %}" class="button is-small is-info">
+                                            <span class="icon">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <span>Mark as Read</span>
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'delete_notification' notification.id %}" class="button is-small is-danger" onclick="return confirm('Are you sure you want to delete this notification?')">
+                                        <span class="icon">
+                                            <i class="fas fa-trash"></i>
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if notifications.has_other_pages %}
+        <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+            <a class="pagination-previous" {% if notifications.has_previous %}href="?page={{ notifications.previous_page_number }}"{% else %}disabled{% endif %}>Previous</a>
+            <a class="pagination-next" {% if notifications.has_next %}href="?page={{ notifications.next_page_number }}"{% else %}disabled{% endif %}>Next page</a>
+            <ul class="pagination-list">
+                {% for i in notifications.paginator.page_range %}
+                <li><a class="pagination-link {% if notifications.number == i %}is-current{% endif %}" aria-label="Page {{ i }}" {% if notifications.number != i %}href="?page={{ i }}"{% endif %}>{{ i }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="notification is-info">
+            <p>You don't have any notifications yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

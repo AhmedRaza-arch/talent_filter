@@ -1,0 +1,381 @@
+{% extends "base1.html" %}
+{% block title %}{{ job.job_title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <h1 class="title">{{ job.job_title }}</h1>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="level-item">
+                <a href="{% url 'job_listings' %}" class="button">
+                    <span class="icon">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                    <span>Back to Job Listings</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-5">
+        <div class="card-content">
+            <div class="columns">
+                <div class="column is-8">
+                    <h2 class="title is-4">{{ job.job_title }}</h2>
+                    <h3 class="subtitle is-6">{{ job.company.name }}</h3>
+
+                    <div class="tags mb-4">
+                        <span class="tag is-info">{{ job.workplace_type }}</span>
+                        <span class="tag is-success">{{ job.employment_type }}</span>
+                        <span class="tag">{{ job.company.location.city }}, {{ job.company.location.country }}</span>
+
+                        {% if is_owner %}
+                        <div class="dropdown is-hoverable">
+                            <div class="dropdown-trigger">
+                                <span class="tag {% if job.status == 'Open' %}is-success{% else %}is-danger{% endif %}" aria-haspopup="true" aria-controls="dropdown-menu">
+                                    {{ job.status }} <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                                </span>
+                            </div>
+                            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                                <div class="dropdown-content">
+                                    <a href="#" class="dropdown-item status-option" data-status="Open" data-job-id="{{ job.id }}">
+                                        Open
+                                    </a>
+                                    <a href="#" class="dropdown-item status-option" data-status="Closed" data-job-id="{{ job.id }}">
+                                        Closed
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <span class="tag {% if job.status == 'Open' %}is-success{% else %}is-danger{% endif %}">{{ job.status }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="content">
+                        <p><strong>Experience Required:</strong> {{ job.experience_required }}</p>
+                        <p><strong>Posted Date:</strong> {{ job.posted_date }}</p>
+                        {% if job.application_deadline %}
+                        <p><strong>Application Deadline:</strong> {{ job.application_deadline }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="box">
+                        <h4 class="title is-5">Recruiter Information</h4>
+                        <p><strong>Name:</strong> {{ job.recruiter_name }}</p>
+                        <p><strong>Position:</strong> {{ job.recruiter_position }}</p>
+                        {% if job.recruiter_email %}
+                        <p><strong>Email:</strong> <a href="mailto:{{ job.recruiter_email }}">{{ job.recruiter_email }}</a></p>
+                        {% endif %}
+                        {% if job.recruiter_linkedin %}
+                        <p><strong>LinkedIn:</strong> <a href="{{ job.recruiter_linkedin }}" target="_blank">View Profile</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="columns">
+        <div class="column is-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <p class="card-header-title">Job Description</p>
+                </div>
+                <div class="card-content">
+                    <div class="content">
+                        <h4 class="title is-5">Summary</h4>
+                        <p>{{ job.summary }}</p>
+
+                        <h4 class="title is-5 mt-5">Key Responsibilities</h4>
+                        <ul>
+                            {% for responsibility in job.get_key_responsibilities %}
+                            <li>{{ responsibility }}</li>
+                            {% endfor %}
+                        </ul>
+
+                        <h4 class="title is-5 mt-5">Requirements</h4>
+                        <ul>
+                            {% for requirement in job.get_requirements %}
+                            <li>{{ requirement }}</li>
+                            {% endfor %}
+                        </ul>
+
+                        {% if job.nice_to_have %}
+                        <h4 class="title is-5 mt-5">Nice to Have</h4>
+                        <ul>
+                            {% for item in job.get_nice_to_have %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <p class="card-header-title">How to Apply</p>
+                </div>
+                <div class="card-content">
+                    <div class="content">
+                        <p>{{ job.how_to_apply }}</p>
+                        {% if user.usertype.is_job_seeker %}
+                        <a href="{% url 'apply_to_job' job.id %}" class="button is-primary mt-3">
+                            <span class="icon">
+                                <i class="fas fa-paper-plane"></i>
+                            </span>
+                            <span>Apply Now</span>
+                        </a>
+                        {% else %}
+                        <a href="{{ job.application_link }}" target="_blank" class="button is-primary mt-3">
+                            <span class="icon">
+                                <i class="fas fa-external-link-alt"></i>
+                            </span>
+                            <span>Apply Now</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="column is-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <p class="card-header-title">Skills Required</p>
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        {% for skill in job.get_skills_required %}
+                        <span class="tag is-primary">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            {% if job.external_portals %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <p class="card-header-title">Also Available On</p>
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        {% for portal in job.get_external_portals %}
+                        <span class="tag is-info">{{ portal }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <p class="card-header-title">Company Location</p>
+                </div>
+                <div class="card-content">
+                    <p>{{ job.company.location.city }}, {{ job.company.location.state }}</p>
+                    <p>{{ job.company.location.country }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_owner %}
+<div class="section">
+    <div class="container">
+        <h2 class="title is-4">Candidate Applications</h2>
+
+        {% if applications %}
+        <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Role</th>
+                        <th>Skill Match</th>
+                        <th>Experience</th>
+                        <th>Location</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                    <tr>
+                        <td>{{ application.candidate.name }}</td>
+                        <td>{{ application.candidate.role }}</td>
+                        <td>
+                            <progress class="progress is-success is-small" value="{{ application.candidate.skill_match }}" max="100">{{ application.candidate.skill_match }}%</progress>
+                            {{ application.candidate.skill_match }}%
+                        </td>
+                        <td>{{ application.candidate.experience }} years</td>
+                        <td>{{ application.candidate.location }}</td>
+                        <td>{{ application.applied_date }}</td>
+                        <td>
+                            <div class="select is-small">
+                                <select class="application-status" data-application-id="{{ application.id }}">
+                                    <option value="Pending Review" {% if application.status == 'Pending Review' %}selected{% endif %}>Pending Review</option>
+                                    <option value="Interview Scheduled" {% if application.status == 'Interview Scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                                    <option value="Shortlisted" {% if application.status == 'Shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                    <option value="Rejected" {% if application.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                    <option value="Hired" {% if application.status == 'Hired' %}selected{% endif %}>Hired</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="buttons are-small">
+                                <a href="#" class="button is-info view-candidate" data-candidate-id="{{ application.candidate.id }}">
+                                    <span class="icon">
+                                        <i class="fas fa-eye"></i>
+                                    </span>
+                                </a>
+                                {% if application.candidate.resume %}
+                                <a href="{{ application.candidate.resume.url }}" class="button is-primary" target="_blank">
+                                    <span class="icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="notification is-info">
+            <p>No applications have been received for this job yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- JavaScript for updating job status -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Job status update
+        const statusOptions = document.querySelectorAll('.status-option');
+        statusOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const status = this.dataset.status;
+                const jobId = this.dataset.jobId;
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('status', status);
+
+                // Send AJAX request
+                fetch(`/job-listings/${jobId}/update-status/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update the UI
+                        const statusTag = document.querySelector('.dropdown-trigger .tag');
+                        statusTag.textContent = status + ' ';
+                        statusTag.innerHTML = status + ' <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>';
+
+                        // Update the tag color
+                        if (status === 'Open') {
+                            statusTag.classList.remove('is-danger');
+                            statusTag.classList.add('is-success');
+                        } else {
+                            statusTag.classList.remove('is-success');
+                            statusTag.classList.add('is-danger');
+                        }
+
+                        // Show success message
+                        alert(data.message);
+                    } else {
+                        // Show error message
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the job status.');
+                });
+            });
+        });
+
+        // Application status update
+        const applicationStatusSelects = document.querySelectorAll('.application-status');
+        applicationStatusSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                const status = this.value;
+                const applicationId = this.dataset.applicationId;
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('status', status);
+
+                // Send AJAX request
+                fetch(`/applications/${applicationId}/update-status/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success message
+                        alert(data.message);
+                    } else {
+                        // Show error message
+                        alert(data.message);
+                        // Reset to previous value
+                        this.value = this.getAttribute('data-previous-value');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the application status.');
+                    // Reset to previous value
+                    this.value = this.getAttribute('data-previous-value');
+                });
+
+                // Store current value as previous value for potential rollback
+                this.setAttribute('data-previous-value', status);
+            });
+
+            // Initialize previous value attribute
+            select.setAttribute('data-previous-value', select.value);
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

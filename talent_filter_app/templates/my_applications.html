@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container">
     <h1 class="title">My Applications</h1>
-    
+
     <div class="tabs">
         <ul>
             <li class="is-active"><a>All Applications</a></li>
@@ -14,7 +14,7 @@
             <li><a>Hired</a></li>
         </ul>
     </div>
-    
+
     <div class="table-container">
         <table class="table is-fullwidth is-striped is-hoverable">
             <thead>
@@ -27,77 +27,54 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Frontend Developer</td>
-                    <td>Web Solutions Inc.</td>
-                    <td>2024-03-01</td>
-                    <td><span class="tag is-warning">Pending Review</span></td>
-                    <td>
-                        <div class="buttons are-small">
-                            <button class="button is-info">View Details</button>
-                            <button class="button is-danger">Withdraw</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Data Analyst</td>
-                    <td>Data Insights Co.</td>
-                    <td>2024-02-25</td>
-                    <td><span class="tag is-success">Interview Scheduled</span></td>
-                    <td>
-                        <div class="buttons are-small">
-                            <button class="button is-info">View Details</button>
-                            <button class="button is-danger">Withdraw</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Product Manager</td>
-                    <td>Innovative Products Inc.</td>
-                    <td>2024-02-20</td>
-                    <td><span class="tag is-danger">Rejected</span></td>
-                    <td>
-                        <div class="buttons are-small">
-                            <button class="button is-info">View Details</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Backend Developer</td>
-                    <td>Tech Innovators</td>
-                    <td>2024-02-15</td>
-                    <td><span class="tag is-info">Hired</span></td>
-                    <td>
-                        <div class="buttons are-small">
-                            <button class="button is-info">View Details</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>UI Designer</td>
-                    <td>Design Masters</td>
-                    <td>2024-02-10</td>
-                    <td><span class="tag is-warning">Pending Review</span></td>
-                    <td>
-                        <div class="buttons are-small">
-                            <button class="button is-info">View Details</button>
-                            <button class="button is-danger">Withdraw</button>
-                        </div>
-                    </td>
-                </tr>
+                {% if applications %}
+                    {% for application in applications %}
+                    <tr>
+                        <td>{{ application.job.job_title }}</td>
+                        <td>{{ application.job.company.name }}</td>
+                        <td>{{ application.applied_date }}</td>
+                        <td>
+                            <span class="tag
+                                {% if application.status == 'Pending Review' %}is-warning
+                                {% elif application.status == 'Interview Scheduled' %}is-success
+                                {% elif application.status == 'Shortlisted' %}is-info
+                                {% elif application.status == 'Rejected' %}is-danger
+                                {% elif application.status == 'Hired' %}is-primary
+                                {% endif %}">{{ application.status }}</span>
+                        </td>
+                        <td>
+                            <div class="buttons are-small">
+                                <a href="{% url 'view_job' application.job.id %}" class="button is-info">View Job</a>
+                                {% if application.status == 'Pending Review' %}
+                                <a href="{% url 'withdraw_application' application.id %}" class="button is-danger" onclick="return confirm('Are you sure you want to withdraw this application?')">Withdraw</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="has-text-centered">
+                            <p>You haven't applied to any jobs yet.</p>
+                            <a href="{% url 'available_jobs' %}" class="button is-primary mt-3">Browse Available Jobs</a>
+                        </td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
-    
+
+    {% if applications %}
     <!-- Pagination -->
     <nav class="pagination is-centered" role="navigation" aria-label="pagination">
-        <a class="pagination-previous">Previous</a>
-        <a class="pagination-next">Next page</a>
+        <a class="pagination-previous" {% if applications.has_previous %}href="?page={{ applications.previous_page_number }}"{% else %}disabled{% endif %}>Previous</a>
+        <a class="pagination-next" {% if applications.has_next %}href="?page={{ applications.next_page_number }}"{% else %}disabled{% endif %}>Next page</a>
         <ul class="pagination-list">
-            <li><a class="pagination-link is-current" aria-label="Page 1" aria-current="page">1</a></li>
-            <li><a class="pagination-link" aria-label="Goto page 2">2</a></li>
-            <li><a class="pagination-link" aria-label="Goto page 3">3</a></li>
+            {% for i in applications.paginator.page_range %}
+            <li><a class="pagination-link {% if applications.number == i %}is-current{% endif %}" aria-label="Page {{ i }}" {% if applications.number != i %}href="?page={{ i }}"{% endif %}>{{ i }}</a></li>
+            {% endfor %}
         </ul>
     </nav>
+    {% endif %}
 </div>
 {% endblock %}

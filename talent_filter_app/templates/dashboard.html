@@ -1,5 +1,405 @@
 {% extends "base1.html" %}
+{% load static %}
+
+{% block title %}Recruiter Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .dashboard-card .card-content {
+        flex-grow: 1;
+        padding-bottom: 1.5rem;
+    }
+    .dashboard-card .title {
+        margin-bottom: 1rem;
+    }
+    .dashboard-card .progress-container {
+        margin-top: 0.5rem;
+    }
+    .status-tag {
+        min-width: 120px;
+        text-align: center;
+    }
+    .action-buttons .button {
+        margin-right: 0.25rem;
+    }
+    .card-footer-item:not(:last-child) {
+        border-right: 1px solid #dbdbdb;
+    }
+    .card-footer-item .icon {
+        margin-right: 0.5rem;
+    }
+    .card-footer-item:hover {
+        background-color: #f5f5f5;
+    }
+    .is-purple {
+        background-color: #9c27b0;
+        color: white;
+    }
+    .is-purple:hover {
+        background-color: #7b1fa2;
+        color: white;
+    }
+    .progress.is-purple::-webkit-progress-value {
+        background-color: #9c27b0;
+    }
+    .progress.is-purple::-moz-progress-bar {
+        background-color: #9c27b0;
+    }
+    .progress.is-purple::-ms-fill {
+        background-color: #9c27b0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1 class="title">Dashboard1</h1>
-<!-- Add dashboard content here -->
+<div class="container">
+    <h1 class="title">Welcome, {{ user.username }}!</h1>
+
+    <!-- Key Metrics Section -->
+    <div class="columns is-multiline">
+        <!-- Total Jobs Posted -->
+        <div class="column is-3">
+            <div class="card dashboard-card">
+                <div class="card-content">
+                    <p class="title is-4">Total Jobs Posted</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">{{ total_jobs }}</p>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'job_listings' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-list"></i></span>
+                        <span>View All</span>
+                    </a>
+                </footer>
+            </div>
+        </div>
+
+        <!-- Pending Applications -->
+        <div class="column is-3">
+            <div class="card dashboard-card">
+                <div class="card-content">
+                    <p class="title is-4">Pending Applications</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">{{ pending_count }}</p>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'candidate_management' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-user-clock"></i></span>
+                        <span>Review</span>
+                    </a>
+                </footer>
+            </div>
+        </div>
+
+        <!-- Shortlisted Candidates -->
+        <div class="column is-3">
+            <div class="card dashboard-card">
+                <div class="card-content">
+                    <p class="title is-4">Shortlisted</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">{{ shortlisted_count }}</p>
+                    <div class="progress-container">
+                        {% if total_jobs > 0 %}
+                            {% with progress=shortlisted_count|floatformat:0 %}
+                                <progress class="progress is-purple" value="{{ progress }}" max="100">{{ progress }}%</progress>
+                            {% endwith %}
+                        {% else %}
+                            <progress class="progress is-purple" value="0" max="100">0%</progress>
+                        {% endif %}
+                    </div>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'shortlisted_candidates' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-user-check"></i></span>
+                        <span>View All</span>
+                    </a>
+                </footer>
+            </div>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="column is-3">
+            <div class="card dashboard-card">
+                <div class="card-content">
+                    <p class="title is-4">AI Matches</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">{{ ai_recommendations_count }}</p>
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'ai_recommendations' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-robot"></i></span>
+                        <span>View Matches</span>
+                    </a>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Job Listings Section -->
+    <div class="columns">
+        <div class="column is-12">
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon mr-2"><i class="fas fa-briefcase"></i></span>
+                        Recent Job Listings
+                    </p>
+                </header>
+                <div class="card-content">
+                    {% if recent_jobs %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>Job Title</th>
+                                    <th>Company</th>
+                                    <th>Posted Date</th>
+                                    <th>Status</th>
+                                    <th>Applications</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for job in recent_jobs %}
+                                <tr>
+                                    <td>{{ job.job_title }}</td>
+                                    <td>{{ job.company.name }}</td>
+                                    <td>{{ job.posted_date }}</td>
+                                    <td>
+                                        {% if job.status == 'Open' %}
+                                            <span class="tag is-success status-tag">{{ job.status }}</span>
+                                        {% else %}
+                                            <span class="tag is-danger status-tag">{{ job.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ job.application_set.count }}</td>
+                                    <td>
+                                        <div class="buttons are-small action-buttons">
+                                            <a href="{% url 'view_job' job.id %}" class="button is-info">
+                                                <span class="icon"><i class="fas fa-eye"></i></span>
+                                                <span>View</span>
+                                            </a>
+                                            <a href="{% url 'edit_job' job.id %}" class="button is-warning">
+                                                <span class="icon"><i class="fas fa-edit"></i></span>
+                                                <span>Edit</span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="notification is-info is-light">
+                        <p>You haven't posted any jobs yet. <a href="{% url 'add_job' %}">Create your first job listing</a>.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'job_listings' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-list"></i></span>
+                        <span>View All Jobs</span>
+                    </a>
+                    <a href="{% url 'add_job' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-plus"></i></span>
+                        <span>Add New Job</span>
+                    </a>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Applications Section -->
+    <div class="columns mt-4">
+        <div class="column is-12">
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon mr-2"><i class="fas fa-user-clock"></i></span>
+                        Pending Applications
+                    </p>
+                </header>
+                <div class="card-content">
+                    {% if pending_applications %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Applied For</th>
+                                    <th>Experience</th>
+                                    <th>Location</th>
+                                    <th>Applied Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in pending_applications %}
+                                <tr>
+                                    <td>{{ application.candidate.name }}</td>
+                                    <td>{{ application.job.job_title }}</td>
+                                    <td>{{ application.candidate.experience }} years</td>
+                                    <td>{{ application.candidate.location }}</td>
+                                    <td>{{ application.applied_date }}</td>
+                                    <td>
+                                        <div class="buttons are-small action-buttons">
+                                            <button class="button is-success update-status" data-application-id="{{ application.id }}" data-status="Shortlisted">
+                                                <span class="icon"><i class="fas fa-check"></i></span>
+                                                <span>Shortlist</span>
+                                            </button>
+                                            <button class="button is-info update-status" data-application-id="{{ application.id }}" data-status="Interview Scheduled">
+                                                <span class="icon"><i class="fas fa-calendar"></i></span>
+                                                <span>Interview</span>
+                                            </button>
+                                            <button class="button is-danger update-status" data-application-id="{{ application.id }}" data-status="Rejected">
+                                                <span class="icon"><i class="fas fa-times"></i></span>
+                                                <span>Reject</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="notification is-info is-light">
+                        <p>No pending applications at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <footer class="card-footer">
+                    <a href="{% url 'candidate_management' %}" class="card-footer-item">
+                        <span class="icon"><i class="fas fa-users"></i></span>
+                        <span>Manage All Candidates</span>
+                    </a>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Status Overview -->
+    <div class="columns mt-4">
+        <div class="column is-12">
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        <span class="icon mr-2"><i class="fas fa-chart-pie"></i></span>
+                        Application Status Overview
+                    </p>
+                </header>
+                <div class="card-content">
+                    <div class="columns is-multiline">
+                        {% for status, count in application_status_counts.items %}
+                        <div class="column is-2">
+                            <div class="has-text-centered">
+                                <p class="heading">{{ status }}</p>
+                                <p class="title">{{ count }}</p>
+                                <progress
+                                    class="progress {% if status == 'Hired' %}is-success{% elif status == 'Rejected' %}is-danger{% elif status == 'Shortlisted' %}is-purple{% elif status == 'Interview Scheduled' %}is-warning{% else %}is-info{% endif %}"
+                                    value="{{ count }}"
+                                    max="{% if total_jobs > 0 %}{{ total_jobs }}{% else %}1{% endif %}">
+                                </progress>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle application status updates
+        const statusButtons = document.querySelectorAll('.update-status');
+
+        statusButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const applicationId = this.dataset.applicationId;
+                const newStatus = this.dataset.status;
+
+                // Send AJAX request to update status
+                fetch(`/applications/${applicationId}/update-status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `status=${newStatus}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success message
+                        const notification = document.createElement('div');
+                        notification.className = 'notification is-success';
+                        notification.innerHTML = `
+                            <button class="delete"></button>
+                            ${data.message}
+                        `;
+
+                        // Add to messages container
+                        const messagesContainer = document.querySelector('.messages');
+                        if (messagesContainer) {
+                            messagesContainer.appendChild(notification);
+                        } else {
+                            // Create messages container if it doesn't exist
+                            const newMessagesContainer = document.createElement('div');
+                            newMessagesContainer.className = 'messages mb-4';
+                            newMessagesContainer.appendChild(notification);
+
+                            const container = document.querySelector('.container');
+                            container.insertBefore(newMessagesContainer, container.firstChild);
+                        }
+
+                        // Add event listener to delete button
+                        const deleteButton = notification.querySelector('.delete');
+                        deleteButton.addEventListener('click', function() {
+                            notification.remove();
+                        });
+
+                        // Remove the row from the table
+                        const row = this.closest('tr');
+                        row.remove();
+
+                        // Refresh the page after a short delay to update counts
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        // Show error message
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the application status.');
+                });
+            });
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}
+
 {% endblock %}
