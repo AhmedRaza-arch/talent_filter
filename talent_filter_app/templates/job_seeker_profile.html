@@ -1,161 +1,268 @@
 {% extends "base1.html" %}
+{% load custom_filters %}
 {% block title %}My Profile{% endblock %}
 
 {% block content %}
 <div class="container">
     <h1 class="title">My Profile</h1>
-    
+
     <div class="columns">
         <div class="column is-3">
             <div class="card">
                 <div class="card-image">
                     <figure class="image is-1by1">
-                        <img src="https://bulma.io/images/placeholders/256x256.png" alt="Profile picture">
+                        {% if job_seeker_profile.profile_picture %}
+                            <img src="{{ job_seeker_profile.profile_picture.url }}" alt="Profile picture">
+                        {% else %}
+                            <img src="https://bulma.io/images/placeholders/256x256.png" alt="Profile picture">
+                        {% endif %}
                     </figure>
                 </div>
                 <div class="card-content">
                     <div class="media">
                         <div class="media-content">
-                            <p class="title is-4">{{ user.username }}</p>
+                            <p class="title is-4">{{ user.get_full_name|default:user.username }}</p>
                             <p class="subtitle is-6">{{ user.email }}</p>
                         </div>
                     </div>
                     <div class="content">
-                        <p><strong>Profile Completion:</strong> 75%</p>
-                        <progress class="progress is-primary" value="75" max="100">75%</progress>
+                        <p><strong>Profile Completion:</strong> {{ profile_completion }}%</p>
+                        <progress class="progress is-primary" value="{{ profile_completion }}" max="100">{{ profile_completion }}%</progress>
+                        {% if profile_completion < 100 %}
+                            <p class="help is-info">Complete your profile to improve your job matches!</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+
+            {% if job_seeker_profile.resume %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <p class="card-header-title">Resume</p>
+                </div>
+                <div class="card-content">
+                    <a href="{{ job_seeker_profile.resume.url }}" class="button is-info is-fullwidth" target="_blank">
+                        <span class="icon">
+                            <i class="fa fa-file-pdf"></i>
+                        </span>
+                        <span>View Resume</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        
+
         <div class="column is-9">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="notification is-{{ message.tags }}">
+                        <button class="delete"></button>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             <div class="card">
                 <div class="card-header">
                     <p class="card-header-title">Personal Information</p>
                 </div>
                 <div class="card-content">
-                    <form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="user_profile">
+
                         <div class="field">
-                            <label class="label">Full Name</label>
+                            <label class="label">First Name</label>
                             <div class="control">
-                                <input class="input" type="text" value="{{ user.username }}">
+                                {{ user_form.first_name }}
                             </div>
+                            {% if user_form.first_name.errors %}
+                                <p class="help is-danger">{{ user_form.first_name.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
+                        <div class="field">
+                            <label class="label">Last Name</label>
+                            <div class="control">
+                                {{ user_form.last_name }}
+                            </div>
+                            {% if user_form.last_name.errors %}
+                                <p class="help is-danger">{{ user_form.last_name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
                         <div class="field">
                             <label class="label">Email</label>
                             <div class="control">
-                                <input class="input" type="email" value="{{ user.email }}">
+                                {{ user_form.email }}
                             </div>
+                            {% if user_form.email.errors %}
+                                <p class="help is-danger">{{ user_form.email.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
-                        <div class="field">
-                            <label class="label">Location</label>
-                            <div class="control">
-                                <input class="input" type="text" placeholder="Enter your location">
-                            </div>
-                        </div>
-                        
-                        <div class="field">
-                            <label class="label">Phone Number</label>
-                            <div class="control">
-                                <input class="input" type="tel" placeholder="Enter your phone number">
-                            </div>
-                        </div>
-                        
+
                         <div class="field">
                             <div class="control">
-                                <button class="button is-primary">Update Personal Information</button>
+                                <button type="submit" class="button is-primary">Update Personal Information</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
-            
+
             <div class="card mt-4">
                 <div class="card-header">
                     <p class="card-header-title">Professional Information</p>
                 </div>
                 <div class="card-content">
-                    <form>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="job_seeker_profile">
+
                         <div class="field">
                             <label class="label">Skills</label>
                             <div class="control">
-                                <textarea class="textarea" placeholder="Enter your skills (e.g., Python, JavaScript, Project Management)"></textarea>
+                                {{ profile_form.skills }}
                             </div>
+                            <p class="help">Separate skills with commas</p>
+                            {% if profile_form.skills.errors %}
+                                <p class="help is-danger">{{ profile_form.skills.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="field">
                             <label class="label">Experience (Years)</label>
                             <div class="control">
-                                <input class="input" type="number" min="0" step="0.5" placeholder="Enter your years of experience">
+                                {{ profile_form.experience_years }}
                             </div>
+                            {% if profile_form.experience_years.errors %}
+                                <p class="help is-danger">{{ profile_form.experience_years.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="field">
                             <label class="label">Education</label>
                             <div class="control">
-                                <textarea class="textarea" placeholder="Enter your education details"></textarea>
+                                {{ profile_form.education }}
                             </div>
+                            {% if profile_form.education.errors %}
+                                <p class="help is-danger">{{ profile_form.education.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
+                        <div class="field">
+                            <label class="label">Location</label>
+                            <div class="control">
+                                {{ profile_form.location }}
+                            </div>
+                            {% if profile_form.location.errors %}
+                                <p class="help is-danger">{{ profile_form.location.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Profile Picture</label>
+                            <div class="control">
+                                <div class="file has-name">
+                                    <label class="file-label">
+                                        {{ profile_form.profile_picture }}
+                                        <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">Choose a file…</span>
+                                        </span>
+                                        <span class="file-name">
+                                            {% if job_seeker_profile.profile_picture %}
+                                                Current: {{ job_seeker_profile.profile_picture|filename }}
+                                            {% else %}
+                                                No file selected
+                                            {% endif %}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% if profile_form.profile_picture.errors %}
+                                <p class="help is-danger">{{ profile_form.profile_picture.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
                         <div class="field">
                             <label class="label">Resume</label>
                             <div class="file has-name">
                                 <label class="file-label">
-                                    <input class="file-input" type="file" name="resume">
+                                    {{ profile_form.resume }}
                                     <span class="file-cta">
                                         <span class="file-icon">
-                                            <i class="fas fa-upload"></i>
+                                            <i class="fa fa-upload"></i>
                                         </span>
-                                        <span class="file-label">
-                                            Choose a file…
-                                        </span>
+                                        <span class="file-label">Choose a file…</span>
                                     </span>
                                     <span class="file-name">
-                                        No file uploaded
+                                        {% if job_seeker_profile.resume %}
+                                            Current: {{ job_seeker_profile.resume|filename }}
+                                        {% else %}
+                                            No file selected
+                                        {% endif %}
                                     </span>
                                 </label>
                             </div>
+                            {% if profile_form.resume.errors %}
+                                <p class="help is-danger">{{ profile_form.resume.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="field">
                             <div class="control">
-                                <button class="button is-primary">Update Professional Information</button>
+                                <button type="submit" class="button is-primary">Update Professional Information</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
-            
+
             <div class="card mt-4">
                 <div class="card-header">
-                    <p class="card-header-title">Account Settings</p>
+                    <p class="card-header-title">Change Password</p>
                 </div>
                 <div class="card-content">
-                    <form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="password_change">
+
                         <div class="field">
-                            <label class="label">Change Password</label>
+                            <label class="label">Current Password</label>
                             <div class="control">
-                                <input class="input" type="password" placeholder="Current Password">
+                                {{ password_form.old_password }}
                             </div>
+                            {% if password_form.old_password.errors %}
+                                <p class="help is-danger">{{ password_form.old_password.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="field">
+                            <label class="label">New Password</label>
                             <div class="control">
-                                <input class="input" type="password" placeholder="New Password">
+                                {{ password_form.new_password1 }}
                             </div>
+                            {% if password_form.new_password1.errors %}
+                                <p class="help is-danger">{{ password_form.new_password1.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="field">
+                            <label class="label">Confirm New Password</label>
                             <div class="control">
-                                <input class="input" type="password" placeholder="Confirm New Password">
+                                {{ password_form.new_password2 }}
                             </div>
+                            {% if password_form.new_password2.errors %}
+                                <p class="help is-danger">{{ password_form.new_password2.errors.0 }}</p>
+                            {% endif %}
                         </div>
-                        
+
                         <div class="field">
                             <div class="control">
-                                <button class="button is-primary">Change Password</button>
+                                <button type="submit" class="button is-primary">Change Password</button>
                             </div>
                         </div>
                     </form>
@@ -164,4 +271,25 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // File input name display
+        const fileInputs = document.querySelectorAll('.file-input');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                const fileName = input.files[0] ? input.files[0].name : 'No file selected';
+                input.closest('.file-label').querySelector('.file-name').textContent = fileName;
+            });
+        });
+
+        // Notification close button
+        const deleteButtons = document.querySelectorAll('.notification .delete');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                button.parentNode.remove();
+            });
+        });
+    });
+</script>
 {% endblock %}

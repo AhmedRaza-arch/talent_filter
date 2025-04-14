@@ -1,5 +1,617 @@
 {% extends "base1.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Shortlisted Candidates{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-tag {
+        min-width: 120px;
+        text-align: center;
+    }
+    .action-buttons .button {
+        margin-right: 0.25rem;
+    }
+    .pagination-link.is-current {
+        background-color: #9c27b0;
+        border-color: #9c27b0;
+    }
+    .is-purple {
+        background-color: #9c27b0;
+        color: white;
+    }
+    .is-purple:hover {
+        background-color: #7b1fa2;
+        color: white;
+    }
+    .filter-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .filter-container .field {
+        margin-bottom: 0;
+    }
+    .candidate-photo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .candidate-info {
+        display: flex;
+        align-items: center;
+    }
+    .candidate-info .candidate-details {
+        margin-left: 10px;
+    }
+    .badge {
+        display: inline-block;
+        min-width: 20px;
+        padding: 0.25em 0.4em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+        background-color: #9c27b0;
+        color: white;
+        margin-left: 5px;
+    }
+    .comparison-card {
+        height: 100%;
+    }
+    .comparison-card .card-content {
+        padding-bottom: 0.5rem;
+    }
+    .comparison-card .card-footer-item {
+        justify-content: center;
+    }
+    .comparison-card .candidate-photo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+    }
+    .comparison-card .candidate-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    .comparison-card .candidate-details {
+        margin-left: 0;
+    }
+    .comparison-card .progress {
+        margin-bottom: 0.5rem;
+    }
+    .comparison-section {
+        margin-bottom: 2rem;
+    }
+    .comparison-title {
+        margin-bottom: 1rem;
+    }
+    .comparison-actions {
+        margin-bottom: 1rem;
+    }
+    .comparison-empty {
+        padding: 2rem;
+        text-align: center;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+    }
+    /* Custom dropdown styling */
+    .custom-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .custom-dropdown-menu {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 200px;
+        box-shadow: 0 8px 16px rgba(10, 10, 10, 0.1);
+        z-index: 999;
+        border-radius: 4px;
+        padding: 0.5rem 0;
+        top: 100%;
+        left: 0;
+    }
+
+    /* For dropdowns in the last column, align to the right */
+    td:last-child .custom-dropdown .custom-dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+
+    /* Special handling for card footer dropdowns */
+    .card-footer-item.custom-dropdown {
+        position: relative;
+        padding: 0;
+    }
+
+    .card-footer-item.custom-dropdown .button {
+        height: 100%;
+        border: none;
+        border-radius: 0;
+    }
+
+    .card-footer-item.custom-dropdown .custom-dropdown-menu {
+        width: 100%;
+        left: 0;
+        right: 0;
+    }
+
+    .custom-dropdown:hover .custom-dropdown-menu {
+        display: block;
+    }
+
+    .custom-dropdown-item {
+        display: block;
+        padding: 0.5rem 1rem;
+        color: #4a4a4a;
+        text-decoration: none;
+    }
+
+    .custom-dropdown-item:hover {
+        background-color: #f5f5f5;
+        color: #363636;
+    }
+
+    /* Ensure table containers don't clip dropdowns */
+    .table-container {
+        overflow: visible !important;
+    }
+
+    .table {
+        overflow: visible !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1 class="title">Shortlisted Candidates</h1>
-<!-- Add shortlisted candidates content here -->
+<div class="container">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <h1 class="title">Shortlisted Candidates</h1>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="level-item">
+                <span class="tag is-purple is-medium">
+                    Total Shortlisted: {{ total_shortlisted }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Section (if candidates are selected) -->
+    {% if selected_applications %}
+    <div class="comparison-section">
+        <div class="level comparison-title">
+            <div class="level-left">
+                <div class="level-item">
+                    <h2 class="subtitle">Candidate Comparison</h2>
+                </div>
+            </div>
+            <div class="level-right">
+                <div class="level-item comparison-actions">
+                    <a href="{% url 'shortlisted_candidates' %}{% if current_job %}?job={{ current_job }}{% endif %}" class="button is-light">
+                        <span class="icon"><i class="fa fa-times"></i></span>
+                        <span>Clear Comparison</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="columns is-multiline">
+            {% for application in selected_applications %}
+            <div class="column is-3">
+                <div class="card comparison-card">
+                    <div class="card-content">
+                        <div class="candidate-info">
+                            {% if application.candidate.photo %}
+                                <img src="{{ application.candidate.photo.url }}" alt="{{ application.candidate.name }}" class="candidate-photo">
+                            {% else %}
+                                <div class="candidate-photo" style="background-color: #e0e0e0; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div class="candidate-details">
+                                <p class="title is-5">{{ application.candidate.name }}</p>
+                                <p class="subtitle is-6">{{ application.candidate.role }}</p>
+                            </div>
+                        </div>
+
+                        <div class="content">
+                            <p><strong>Applied For:</strong> {{ application.job.job_title }}</p>
+                            <p><strong>Experience:</strong> {{ application.candidate.experience }} years</p>
+                            <p><strong>Location:</strong> {{ application.candidate.location }}</p>
+                            <p><strong>Applied Date:</strong> {{ application.applied_date }}</p>
+
+                            <p><strong>Skill Match:</strong></p>
+                            <progress class="progress is-small {% if application.candidate.skill_match >= 80 %}is-success{% elif application.candidate.skill_match >= 60 %}is-info{% elif application.candidate.skill_match >= 40 %}is-warning{% else %}is-danger{% endif %}" value="{{ application.candidate.skill_match }}" max="100">{{ application.candidate.skill_match }}%</progress>
+                            <p class="has-text-centered">{{ application.candidate.skill_match }}%</p>
+                        </div>
+                    </div>
+                    <footer class="card-footer">
+                        {% if application.candidate.resume %}
+                            <a href="{{ application.candidate.resume.url }}" class="card-footer-item" target="_blank">
+                                <span class="icon"><i class="fa fa-file-pdf"></i></span>
+                                <span>Resume</span>
+                            </a>
+                        {% endif %}
+                        <div class="custom-dropdown card-footer-item" style="border-left: 1px solid #dbdbdb; border-right: none;">
+                            <button class="button is-white dropdown-toggle" style="width: 100%; justify-content: center;" id="card-status-dropdown-{{ application.id }}">
+                                <span>Update Status</span>
+                                <span class="icon is-small">
+                                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                                </span>
+                            </button>
+                            <div class="custom-dropdown-menu" id="card-dropdown-menu-{{ application.id }}" style="width: 100%;">
+                                <a href="#" class="custom-dropdown-item update-status" data-application-id="{{ application.id }}" data-status="Interview Scheduled">
+                                    Interview Scheduled
+                                </a>
+                                <a href="#" class="custom-dropdown-item update-status" data-application-id="{{ application.id }}" data-status="Hired">
+                                    Hire
+                                </a>
+                                <a href="#" class="custom-dropdown-item update-status" data-application-id="{{ application.id }}" data-status="Rejected">
+                                    Reject
+                                </a>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filters and Search -->
+    <div class="filter-container">
+        <!-- Job Filter -->
+        <div class="field has-addons">
+            <div class="control">
+                <div class="select">
+                    <select id="job-filter">
+                        <option value="">All Jobs</option>
+                        {% for job in jobs %}
+                            <option value="{{ job.id }}" {% if current_job == job.id|stringformat:"s" %}selected{% endif %}>{{ job.job_title }} ({% with count=job_counts|get_item:job.id %}{% if count %}{{ count }}{% else %}0{% endif %}{% endwith %})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-info" id="apply-job-filter">Filter</button>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="field has-addons">
+            <div class="control is-expanded">
+                <input class="input" type="text" placeholder="Search candidates..." id="search-input" value="{{ search_query }}">
+            </div>
+            <div class="control">
+                <button class="button is-info" id="search-button">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    {% if applications %}
+    <form id="compare-form" method="get" action="{% url 'shortlisted_candidates' %}">
+        {% if current_job %}<input type="hidden" name="job" value="{{ current_job }}">{% endif %}
+        {% if search_query %}<input type="hidden" name="search" value="{{ search_query }}">{% endif %}
+
+        <div class="level">
+            <div class="level-left">
+                <div class="level-item">
+                    <button type="submit" class="button is-purple" id="compare-button" disabled>
+                        <span class="icon"><i class="fa fa-balance-scale"></i></span>
+                        <span>Compare Selected</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>Candidate</th>
+                        <th>Applied For</th>
+                        <th>Experience</th>
+                        <th>Skill Match</th>
+                        <th>Location</th>
+                        <th>Applied Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="compare" value="{{ application.id }}" class="candidate-checkbox">
+                        </td>
+                        <td>
+                            <div class="candidate-info">
+                                {% if application.candidate.photo %}
+                                    <img src="{{ application.candidate.photo.url }}" alt="{{ application.candidate.name }}" class="candidate-photo">
+                                {% else %}
+                                    <div class="candidate-photo" style="background-color: #e0e0e0; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="candidate-details">
+                                    <strong>{{ application.candidate.name }}</strong><br>
+                                    <small>{{ application.candidate.role }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ application.job.job_title }}</td>
+                        <td>{{ application.candidate.experience }} years</td>
+                        <td>
+                            <progress class="progress is-small {% if application.candidate.skill_match >= 80 %}is-success{% elif application.candidate.skill_match >= 60 %}is-info{% elif application.candidate.skill_match >= 40 %}is-warning{% else %}is-danger{% endif %}" value="{{ application.candidate.skill_match }}" max="100">{{ application.candidate.skill_match }}%</progress>
+                            <small>{{ application.candidate.skill_match }}%</small>
+                        </td>
+                        <td>{{ application.candidate.location }}</td>
+                        <td>{{ application.applied_date }}</td>
+                        <td>
+                            <div class="buttons are-small action-buttons">
+                                <div class="custom-dropdown">
+                                    <button class="button is-info dropdown-toggle" id="status-dropdown-{{ application.id }}">
+                                        <span>Update Status</span>
+                                        <span class="icon is-small">
+                                            <i class="fa fa-angle-down" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                    <div class="custom-dropdown-menu" id="dropdown-menu-{{ application.id }}">
+                                        <a href="#" class="custom-dropdown-item update-status" data-application-id="{{ application.id }}" data-status="Interview Scheduled">
+                                            Interview Scheduled
+                                        </a>
+                                        <a href="#" class="custom-dropdown-item update-status" data-application-id="{{ application.id }}" data-status="Hired">
+                                            Hire
+                                        </a>
+                                        <a href="#" class="custom-dropdown-item update-status" data-application-id="{{ application.id }}" data-status="Rejected">
+                                            Reject
+                                        </a>
+                                    </div>
+                                </div>
+                                {% if application.candidate.resume %}
+                                    <a href="{{ application.candidate.resume.url }}" class="button is-success" target="_blank">
+                                        <span class="icon"><i class="fa fa-file-pdf"></i></span>
+                                        <span>Resume</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+
+    <!-- Pagination -->
+    {% if applications.has_other_pages %}
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+        {% if applications.has_previous %}
+            <a href="?{% if current_job %}job={{ current_job }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ applications.previous_page_number }}" class="pagination-previous">Previous</a>
+        {% else %}
+            <a class="pagination-previous" disabled>Previous</a>
+        {% endif %}
+
+        {% if applications.has_next %}
+            <a href="?{% if current_job %}job={{ current_job }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ applications.next_page_number }}" class="pagination-next">Next</a>
+        {% else %}
+            <a class="pagination-next" disabled>Next</a>
+        {% endif %}
+
+        <ul class="pagination-list">
+            {% for i in applications.paginator.page_range %}
+                {% if applications.number == i %}
+                    <li><a class="pagination-link is-current" aria-label="Page {{ i }}" aria-current="page">{{ i }}</a></li>
+                {% elif i > applications.number|add:'-3' and i < applications.number|add:'3' %}
+                    <li><a href="?{% if current_job %}job={{ current_job }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}page={{ i }}" class="pagination-link" aria-label="Page {{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="notification is-info is-light">
+        <p>No shortlisted candidates found matching your criteria.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle job filter
+        const jobFilter = document.getElementById('job-filter');
+        const applyJobFilterBtn = document.getElementById('apply-job-filter');
+
+        applyJobFilterBtn.addEventListener('click', function() {
+            const jobId = jobFilter.value;
+            let url = '{% url "shortlisted_candidates" %}';
+
+            // Build query string
+            const params = new URLSearchParams();
+
+            // Add job filter if selected
+            if (jobId) {
+                params.append('job', jobId);
+            }
+
+            // Add search query if exists
+            const searchQuery = '{{ search_query }}';
+            if (searchQuery) {
+                params.append('search', searchQuery);
+            }
+
+            // Redirect to filtered URL
+            window.location.href = url + '?' + params.toString();
+        });
+
+        // Handle search
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+
+        searchButton.addEventListener('click', function() {
+            const searchValue = searchInput.value.trim();
+            let url = '{% url "shortlisted_candidates" %}';
+
+            // Build query string
+            const params = new URLSearchParams();
+
+            // Add current job filter if exists
+            const currentJob = '{{ current_job }}';
+            if (currentJob) {
+                params.append('job', currentJob);
+            }
+
+            // Add search query if exists
+            if (searchValue) {
+                params.append('search', searchValue);
+            }
+
+            // Redirect to search URL
+            window.location.href = url + '?' + params.toString();
+        });
+
+        // Allow search on Enter key press
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+
+        // Handle application status updates
+        const statusButtons = document.querySelectorAll('.update-status');
+
+        statusButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const applicationId = this.dataset.applicationId;
+                const newStatus = this.dataset.status;
+
+                // Send AJAX request to update status
+                fetch(`/applications/${applicationId}/update-status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `status=${newStatus}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Show success message
+                        const notification = document.createElement('div');
+                        notification.className = 'notification is-success';
+                        notification.innerHTML = `
+                            <button class="delete"></button>
+                            ${data.message}
+                        `;
+
+                        // Add to messages container
+                        const messagesContainer = document.querySelector('.messages');
+                        if (messagesContainer) {
+                            messagesContainer.appendChild(notification);
+                        } else {
+                            // Create messages container if it doesn't exist
+                            const newMessagesContainer = document.createElement('div');
+                            newMessagesContainer.className = 'messages mb-4';
+                            newMessagesContainer.appendChild(notification);
+
+                            const container = document.querySelector('.container');
+                            container.insertBefore(newMessagesContainer, container.firstChild);
+                        }
+
+                        // Add event listener to delete button
+                        const deleteButton = notification.querySelector('.delete');
+                        deleteButton.addEventListener('click', function() {
+                            notification.remove();
+                        });
+
+                        // Refresh the page after a short delay to update status
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // Show error message
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the application status.');
+                });
+            });
+        });
+
+        // Handle checkbox selection for comparison
+        const checkboxes = document.querySelectorAll('.candidate-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all');
+        const compareButton = document.getElementById('compare-button');
+
+        // Function to update compare button state
+        function updateCompareButtonState() {
+            const checkedCount = document.querySelectorAll('.candidate-checkbox:checked').length;
+            compareButton.disabled = checkedCount < 2 || checkedCount > 4;
+
+            if (checkedCount < 2) {
+                compareButton.setAttribute('title', 'Select at least 2 candidates to compare');
+            } else if (checkedCount > 4) {
+                compareButton.setAttribute('title', 'You can compare up to 4 candidates at a time');
+            } else {
+                compareButton.removeAttribute('title');
+            }
+        }
+
+        // Initialize compare button state
+        updateCompareButtonState();
+
+        // Add event listeners to checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateCompareButtonState();
+            });
+        });
+
+        // Handle select all checkbox
+        selectAllCheckbox.addEventListener('change', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateCompareButtonState();
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}
+
 {% endblock %}

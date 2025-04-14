@@ -13,6 +13,7 @@ urlpatterns = [
     path('accounts/signup/job-seeker/', app_views.job_seeker_signup, name='job_seeker_signup'),
 ]
 
-# Serve static files during development
+# Serve static and media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

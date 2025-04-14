@@ -1,5 +1,329 @@
 {% extends "base1.html" %}
+{% load static %}
+
+{% block title %}Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tabs li.is-active a {
+        border-bottom-color: #9c27b0;
+        color: #9c27b0;
+    }
+    .is-purple {
+        background-color: #9c27b0;
+        color: white;
+    }
+    .is-purple:hover {
+        background-color: #7b1fa2;
+        color: white;
+    }
+    .settings-card {
+        margin-bottom: 2rem;
+    }
+    .profile-picture-container {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 1rem;
+        border: 3px solid #9c27b0;
+    }
+    .profile-picture-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        border: 3px solid #9c27b0;
+    }
+    .profile-picture-placeholder i {
+        font-size: 4rem;
+        color: #9c27b0;
+    }
+    .file-upload-container {
+        display: flex;
+        justify-content: center;
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.is-active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1 class="title">Settings</h1>
-<!-- Add settings content here -->
+<div class="container">
+    <h1 class="title">Settings</h1>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <ul>
+            <li class="is-active" data-tab="personal-info"><a>Personal Information</a></li>
+            <li data-tab="professional-info"><a>Professional Information</a></li>
+            <li data-tab="password"><a>Change Password</a></li>
+        </ul>
+    </div>
+
+    <!-- Personal Information Tab -->
+    <div id="personal-info" class="tab-content is-active">
+        <div class="card settings-card">
+            <div class="card-header">
+                <p class="card-header-title">Personal Information</p>
+            </div>
+            <div class="card-content">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="user_profile">
+
+                    <div class="field">
+                        <label class="label">First Name</label>
+                        <div class="control">
+                            {{ user_form.first_name }}
+                        </div>
+                        {% if user_form.first_name.errors %}
+                            <p class="help is-danger">{{ user_form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Last Name</label>
+                        <div class="control">
+                            {{ user_form.last_name }}
+                        </div>
+                        {% if user_form.last_name.errors %}
+                            <p class="help is-danger">{{ user_form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Email</label>
+                        <div class="control">
+                            {{ user_form.email }}
+                        </div>
+                        {% if user_form.email.errors %}
+                            <p class="help is-danger">{{ user_form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button type="submit" class="button is-purple">
+                                <span class="icon"><i class="fa fa-save"></i></span>
+                                <span>Save Changes</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Information Tab -->
+    <div id="professional-info" class="tab-content">
+        <div class="card settings-card">
+            <div class="card-header">
+                <p class="card-header-title">Professional Information</p>
+            </div>
+            <div class="card-content">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="recruiter_profile">
+
+                    <div class="profile-picture-container">
+                        {% if recruiter_profile.profile_picture %}
+                            <img src="{{ recruiter_profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                        {% else %}
+                            <div class="profile-picture-placeholder">
+                                <i class="fa fa-user"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="file-upload-container">
+                            <div class="file has-name is-centered">
+                                <label class="file-label">
+                                    <input class="file-input" type="file" name="profile_picture" id="profile-picture-input">
+                                    <span class="file-cta">
+                                        <span class="file-icon">
+                                            <i class="fa fa-upload"></i>
+                                        </span>
+                                        <span class="file-label">
+                                            Choose a file…
+                                        </span>
+                                    </span>
+                                    <span class="file-name" id="profile-picture-filename">
+                                        No file selected
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Role</label>
+                        <div class="control">
+                            {{ profile_form.role }}
+                        </div>
+                        {% if profile_form.role.errors %}
+                            <p class="help is-danger">{{ profile_form.role.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Company Name</label>
+                        <div class="control">
+                            {{ profile_form.company_name }}
+                        </div>
+                        {% if profile_form.company_name.errors %}
+                            <p class="help is-danger">{{ profile_form.company_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Company Website</label>
+                        <div class="control">
+                            {{ profile_form.company_website }}
+                        </div>
+                        {% if profile_form.company_website.errors %}
+                            <p class="help is-danger">{{ profile_form.company_website.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button type="submit" class="button is-purple">
+                                <span class="icon"><i class="fa fa-save"></i></span>
+                                <span>Save Changes</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Tab -->
+    <div id="password" class="tab-content">
+        <div class="card settings-card">
+            <div class="card-header">
+                <p class="card-header-title">Change Password</p>
+            </div>
+            <div class="card-content">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="password_change">
+
+                    <div class="field">
+                        <label class="label">Current Password</label>
+                        <div class="control">
+                            {{ password_form.old_password }}
+                        </div>
+                        {% if password_form.old_password.errors %}
+                            <p class="help is-danger">{{ password_form.old_password.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label class="label">New Password</label>
+                        <div class="control">
+                            {{ password_form.new_password1 }}
+                        </div>
+                        {% if password_form.new_password1.errors %}
+                            <p class="help is-danger">{{ password_form.new_password1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Confirm New Password</label>
+                        <div class="control">
+                            {{ password_form.new_password2 }}
+                        </div>
+                        {% if password_form.new_password2.errors %}
+                            <p class="help is-danger">{{ password_form.new_password2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <button type="submit" class="button is-purple">
+                                <span class="icon"><i class="fa fa-key"></i></span>
+                                <span>Change Password</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tabs li');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('is-active'));
+
+                // Add active class to clicked tab
+                this.classList.add('is-active');
+
+                // Hide all tab contents
+                tabContents.forEach(content => content.classList.remove('is-active'));
+
+                // Show the corresponding tab content
+                const tabId = this.dataset.tab;
+                document.getElementById(tabId).classList.add('is-active');
+            });
+        });
+
+        // File input functionality
+        const fileInput = document.getElementById('profile-picture-input');
+        const fileNameDisplay = document.getElementById('profile-picture-filename');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length > 0) {
+                    fileNameDisplay.textContent = fileInput.files[0].name;
+
+                    // Preview the image
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const profilePicture = document.querySelector('.profile-picture');
+                        const profilePicturePlaceholder = document.querySelector('.profile-picture-placeholder');
+
+                        if (profilePicture) {
+                            profilePicture.src = e.target.result;
+                        } else if (profilePicturePlaceholder) {
+                            // Replace placeholder with actual image
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = 'Profile Picture';
+                            img.className = 'profile-picture';
+
+                            profilePicturePlaceholder.parentNode.replaceChild(img, profilePicturePlaceholder);
+                        }
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    fileNameDisplay.textContent = 'No file selected';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
 {% endblock %}

@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from .models import RecruiterProfile, JobSeekerProfile, Job, Company, Location
 import json
@@ -105,6 +105,54 @@ class CompanyForm(forms.ModelForm):
         super(CompanyForm, self).__init__(*args, **kwargs)
         for field_name in self.fields:
             self.fields[field_name].widget.attrs.update({'class': 'input'})
+
+class UserProfileForm(forms.ModelForm):
+    """Form for updating user profile information"""
+    first_name = forms.CharField(max_length=30, required=False)
+    last_name = forms.CharField(max_length=30, required=False)
+    email = forms.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+    def __init__(self, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'input'})
+
+class JobSeekerProfileForm(forms.ModelForm):
+    """Form for updating job seeker profile information"""
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = ['profile_picture', 'resume', 'skills', 'experience_years', 'education', 'location']
+        widgets = {
+            'skills': forms.Textarea(attrs={'class': 'textarea', 'placeholder': 'Enter your skills (e.g., Python, JavaScript, Project Management)'}),
+            'education': forms.Textarea(attrs={'class': 'textarea', 'placeholder': 'Enter your education details'}),
+            'location': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Enter your location'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'input', 'min': '0', 'step': '0.5'}),
+        }
+
+class RecruiterProfileForm(forms.ModelForm):
+    """Form for updating recruiter profile information"""
+
+    class Meta:
+        model = RecruiterProfile
+        fields = ['profile_picture', 'role', 'company_name', 'company_website']
+        widgets = {
+            'role': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Enter your role (e.g., HR Manager, Talent Acquisition Specialist)'}),
+            'company_name': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Enter your company name'}),
+            'company_website': forms.URLInput(attrs={'class': 'input', 'placeholder': 'Enter your company website URL'}),
+        }
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """Custom password change form with styling"""
+
+    def __init__(self, *args, **kwargs):
+        super(CustomPasswordChangeForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'input'})
 
 class JobForm(forms.ModelForm):
     # Company and location fields

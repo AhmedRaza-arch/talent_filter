@@ -39,7 +39,7 @@ function updateThemeIcon(icon) {
         
         // Add new icon
         const iconElement = document.createElement('i');
-        iconElement.className = `fas fa-${icon}`;
+        iconElement.className = `fa fa-${icon}`;
         themeToggle.appendChild(iconElement);
     }
 }

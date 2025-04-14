@@ -13,7 +13,7 @@
             <div class="level-item">
                 <a href="{% url 'mark_all_read' %}" class="button is-info">
                     <span class="icon">
-                        <i class="fas fa-check-double"></i>
+                        <i class="fa fa-check-double"></i>
                     </span>
                     <span>Mark All as Read</span>
                 </a>
@@ -30,15 +30,15 @@
                             <div class="column is-1">
                                 <span class="icon is-large">
                                     {% if notification.notification_type == 'application' %}
-                                        <i class="fas fa-file-alt fa-2x has-text-info"></i>
+                                        <i class="fa fa-file-alt fa-2x has-text-info"></i>
                                     {% elif notification.notification_type == 'message' %}
-                                        <i class="fas fa-envelope fa-2x has-text-success"></i>
+                                        <i class="fa fa-envelope fa-2x has-text-success"></i>
                                     {% elif notification.notification_type == 'interview' %}
-                                        <i class="fas fa-calendar-check fa-2x has-text-warning"></i>
+                                        <i class="fa fa-calendar-check fa-2x has-text-warning"></i>
                                     {% elif notification.notification_type == 'job' %}
-                                        <i class="fas fa-briefcase fa-2x has-text-primary"></i>
+                                        <i class="fa fa-briefcase fa-2x has-text-primary"></i>
                                     {% else %}
-                                        <i class="fas fa-bell fa-2x has-text-grey"></i>
+                                        <i class="fa fa-bell fa-2x has-text-grey"></i>
                                     {% endif %}
                                 </span>
                             </div>
@@ -56,14 +56,14 @@
                                     {% if not notification.is_read %}
                                         <a href="{% url 'mark_notification_read' notification.id %}" class="button is-small is-info">
                                             <span class="icon">
-                                                <i class="fas fa-check"></i>
+                                                <i class="fa fa-check"></i>
                                             </span>
                                             <span>Mark as Read</span>
                                         </a>
                                     {% endif %}
                                     <a href="{% url 'delete_notification' notification.id %}" class="button is-small is-danger" onclick="return confirm('Are you sure you want to delete this notification?')">
                                         <span class="icon">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fa fa-trash"></i>
                                         </span>
                                     </a>
                                 </div>

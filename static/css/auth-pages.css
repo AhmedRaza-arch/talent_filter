@@ -1,0 +1,273 @@
+/* Authentication pages styling (login, signup) */
+
+/* Background styling */
+.login-background {
+    background-image: url('../images/backgrounds/purple-waves.svg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: calc(100vh - 52px - 72px); /* Subtract navbar and footer heights */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 0;
+    margin: 0;
+    width: 100%;
+    position: relative;
+}
+
+/* Fix for section padding */
+.section.auth-section {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    min-height: calc(100vh - 52px - 72px); /* Subtract navbar and footer heights */
+}
+
+.section.auth-section > .container {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Ensure proper spacing with header and footer */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.navbar {
+    flex-shrink: 0;
+}
+
+.footer {
+    flex-shrink: 0;
+}
+
+.section {
+    flex: 1 0 auto;
+}
+
+/* Enhanced card styling */
+.login-card {
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    width: 100%;
+    min-width: 320px;
+    max-width: 800px;
+    margin: 2rem auto;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.95);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+.card-header-title {
+    font-size: 1.5rem;
+    color: white;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.card-content {
+    padding: 2.5rem;
+}
+
+.card-footer {
+    background-color: rgba(245, 245, 250, 0.7);
+    border-top: 1px solid rgba(106, 76, 147, 0.1);
+}
+
+/* Improve form layout */
+.field {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.field:not(:last-child) {
+    margin-bottom: 1.5rem;
+}
+
+/* Form field styling */
+.login-card .input,
+.login-card .select select {
+    width: 100%;
+    padding: 0.75rem;
+    height: auto;
+    font-size: 1rem;
+}
+
+.login-card .label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+}
+
+.login-card .help {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+/* Fix for long form fields */
+.login-card .control {
+    width: 100%;
+}
+
+/* Enhanced button styling */
+.login-card .button {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    height: 2.75em;
+    transition: all 0.3s ease;
+}
+
+.login-card .button.is-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.login-card .button.is-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(106, 76, 147, 0.3);
+}
+
+.login-card .button.is-info {
+    background: linear-gradient(135deg, var(--info) 0%, var(--secondary) 100%);
+}
+
+.login-card .button.is-info:hover {
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--info) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(157, 101, 201, 0.3);
+}
+
+.login-card .button.is-success {
+    background: linear-gradient(135deg, var(--success) 0%, var(--accent) 100%);
+}
+
+.login-card .button.is-success:hover {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(94, 53, 177, 0.3);
+}
+
+/* Input field styling */
+.input {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(106, 76, 147, 0.2);
+}
+
+.input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(106, 76, 147, 0.2);
+}
+
+/* Responsive button layout */
+.is-flex {
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 15px;
+}
+
+@media screen and (max-width: 768px) {
+    .is-flex {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .is-flex .button {
+        width: 100%;
+    }
+
+    .login-card {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        width: 95%;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+    }
+
+    .login-background {
+        padding: 1.5rem 0;
+    }
+}
+
+/* Additional responsive adjustments */
+@media screen and (min-width: 769px) and (max-width: 1023px) {
+    .login-card {
+        width: 90%;
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .login-card {
+        width: 85%;
+    }
+}
+
+/* Dark theme adjustments */
+.is-dark-theme .login-background {
+    background-image: url('../images/backgrounds/purple-geometric.svg');
+}
+
+.is-dark-theme .login-card {
+    background-color: rgba(45, 55, 72, 0.9);
+    border: 1px solid rgba(74, 85, 104, 0.3);
+}
+
+.is-dark-theme .card-footer {
+    background-color: rgba(26, 32, 44, 0.4);
+    border-top: 1px solid rgba(74, 85, 104, 0.3);
+}
+
+/* Specific header colors */
+.login-header {
+    background-color: var(--primary);
+}
+
+.recruiter-header {
+    background-color: var(--info);
+}
+
+.job-seeker-header {
+    background-color: var(--success);
+}
+
+/* Specific styling for signup forms */
+.login-card form {
+    width: 100%;
+}
+
+/* Add spacing for error messages */
+.login-card .notification {
+    margin-bottom: 1rem;
+}
+
+/* Ensure card has proper spacing */
+.login-card .card-content {
+    padding: 2rem;
+}
+
+@media screen and (max-width: 768px) {
+    .login-card .card-content {
+        padding: 1.5rem;
+    }
+}
+
+/* Ensure card footer has proper spacing */
+.login-card .card-footer-item {
+    padding: 1.5rem;
+}

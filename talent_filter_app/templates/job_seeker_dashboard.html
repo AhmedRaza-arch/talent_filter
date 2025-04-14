@@ -3,7 +3,8 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="title">Welcome, {{ user.username }}!</h1>
+    <h1 class="title">Welcome, {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}!</h1>
+    <p class="subtitle">Here's an overview of your job search activity</p>
 
     <!-- Custom CSS for equal height cards -->
     <style>
@@ -31,8 +32,8 @@
             <div class="card dashboard-card">
                 <div class="card-content">
                     <p class="title is-4">Available Jobs</p>
-                    <p class="subtitle is-1" style="margin-top:0.25em">24</p>
-                    
+                    <p class="subtitle is-1" style="margin-top:0.25em">{{ available_jobs_count }}</p>
+
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'available_jobs' %}" class="card-footer-item">View All</a>
@@ -43,7 +44,7 @@
             <div class="card dashboard-card">
                 <div class="card-content">
                     <p class="title is-4">My Applications</p>
-                    <p class="subtitle is-1" style="margin-top:0.25em">5</p>
+                    <p class="subtitle is-1" style="margin-top:0.25em">{{ applications_count }}</p>
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'my_applications' %}" class="card-footer-item">View All</a>
@@ -54,9 +55,9 @@
             <div class="card dashboard-card">
                 <div class="card-content">
                     <p class="title is-4">Profile Completion</p>
-                    <p class="subtitle is-1">75%</p>
+                    <p class="subtitle is-1">{{ profile_completion }}%</p>
                     <div class="progress-container">
-                        <progress class="progress is-primary" value="75" max="100">75%</progress>
+                        <progress class="progress is-primary" value="{{ profile_completion }}" max="100">{{ profile_completion }}%</progress>
                     </div>
                 </div>
                 <footer class="card-footer">
@@ -67,66 +68,77 @@
 
         <!-- Recent Job Listings -->
         <div class="column is-12" style="border:solid 1px; margin:10px; border-radius:5px;background-color:white">
-            <h2 class="title is-4">Recent Job Listings</h2>
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <h2 class="title is-4">Recent Job Listings</h2>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <a href="{% url 'available_jobs' %}" class="button is-small is-primary">View All Jobs</a>
+                    </div>
+                </div>
+            </div>
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-hoverable">
                     <thead>
                         <tr>
                             <th>Job Title</th>
-                            <th>Department</th>
+                            <th>Employment Type</th>
                             <th>Company</th>
                             <th>Posted Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Senior Software Engineer</td>
-                            <td>Engineering</td>
-                            <td>Tech Solutions Inc.</td>
-                            <td>2024-03-15</td>
-                            <td>
-                                <div class="buttons are-small">
-                                    <button class="button is-primary">Apply</button>
-                                    <button class="button is-info">View Details</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Marketing Manager</td>
-                            <td>Marketing</td>
-                            <td>Global Marketing Ltd.</td>
-                            <td>2024-03-10</td>
-                            <td>
-                                <div class="buttons are-small">
-                                    <button class="button is-primary">Apply</button>
-                                    <button class="button is-info">View Details</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>UX Designer</td>
-                            <td>Design</td>
-                            <td>Creative Solutions</td>
-                            <td>2024-03-08</td>
-                            <td>
-                                <div class="buttons are-small">
-                                    <button class="button is-primary">Apply</button>
-                                    <button class="button is-info">View Details</button>
-                                </div>
-                            </td>
-                        </tr>
+                        {% if recent_jobs %}
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td>{{ job.job_title }}</td>
+                                <td>{{ job.employment_type }}</td>
+                                <td>{{ job.company.name }}</td>
+                                <td>{{ job.posted_date }}</td>
+                                <td>
+                                    <div class="buttons are-small">
+                                        {% if job.id in applied_job_ids %}
+                                            <span class="tag is-success">Applied</span>
+                                        {% else %}
+                                            <a href="{% url 'apply_to_job' job.id %}" class="button is-primary">Apply</a>
+                                        {% endif %}
+                                        <a href="{% url 'view_job' job.id %}" class="button is-info">View Details</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="has-text-centered">
+                                    <p class="my-4">No jobs available at the moment.</p>
+                                    <p>Check back later for new opportunities or adjust your search criteria.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
-            <div class="has-text-centered mt-4">
-                <a href="{% url 'available_jobs' %}" class="button is-primary">View All Jobs</a>
-            </div>
+
         </div>
 
         <!-- My Applications -->
         <div class="column is-12" style="border:solid 1px; margin:10px; border-radius:5px;;background-color:white">
-            <h2 class="title is-4">My Recent Applications</h2>
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <h2 class="title is-4">My Recent Applications</h2>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <a href="{% url 'my_applications' %}" class="button is-small is-primary">View All Applications</a>
+                    </div>
+                </div>
+            </div>
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-hoverable">
                     <thead>
@@ -139,34 +151,41 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Frontend Developer</td>
-                            <td>Web Solutions Inc.</td>
-                            <td>2024-03-01</td>
-                            <td><span class="tag is-warning">Pending Review</span></td>
-                            <td>
-                                <div class="buttons are-small">
-                                    <button class="button is-info">View Details</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Data Analyst</td>
-                            <td>Data Insights Co.</td>
-                            <td>2024-02-25</td>
-                            <td><span class="tag is-success">Interview Scheduled</span></td>
-                            <td>
-                                <div class="buttons are-small">
-                                    <button class="button is-info">View Details</button>
-                                </div>
-                            </td>
-                        </tr>
+                        {% if recent_applications %}
+                            {% for application in recent_applications %}
+                            <tr>
+                                <td>{{ application.job.job_title }}</td>
+                                <td>{{ application.job.company.name }}</td>
+                                <td>{{ application.applied_date }}</td>
+                                <td>
+                                    <span class="tag
+                                        {% if application.status == 'Pending Review' %}is-warning
+                                        {% elif application.status == 'Interview Scheduled' %}is-success
+                                        {% elif application.status == 'Shortlisted' %}is-info
+                                        {% elif application.status == 'Rejected' %}is-danger
+                                        {% elif application.status == 'Hired' %}is-primary
+                                        {% endif %}">{{ application.status }}</span>
+                                </td>
+                                <td>
+                                    <div class="buttons are-small">
+                                        <a href="{% url 'view_job' application.job.id %}" class="button is-info">View Job</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="has-text-centered">
+                                    <p class="my-4">You haven't applied to any jobs yet.</p>
+                                    <p>Browse available jobs and start applying to find your next opportunity!</p>
+                                    <a href="{% url 'available_jobs' %}" class="button is-primary mt-3">Browse Jobs</a>
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
-            <div class="has-text-centered mt-4">
-                <a href="{% url 'my_applications' %}" class="button is-primary">View All Applications</a>
-            </div>
+
         </div>
     </div>
 </div>

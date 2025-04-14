@@ -1,0 +1,175 @@
+/* Custom notification styling */
+
+/* Container for notifications */
+.messages {
+    position: fixed;
+    top: 70px; /* Below the navbar */
+    right: 20px;
+    max-width: 350px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Base notification styling */
+.notification {
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 0 !important;
+    position: relative;
+    animation: slideIn 0.3s ease-out forwards;
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+/* Notification colors - more distinct */
+.notification.is-primary {
+    background-color: #8a6db1; /* Lighter purple for better visibility */
+    color: white;
+    border-left: 5px solid #6a4c93;
+}
+
+.notification.is-success {
+    background-color: #48c774; /* Green for success */
+    color: white;
+    border-left: 5px solid #257942;
+}
+
+.notification.is-danger {
+    background-color: #f14668; /* Red for errors */
+    color: white;
+    border-left: 5px solid #cc0f35;
+}
+
+.notification.is-warning {
+    background-color: #ffdd57; /* Yellow for warnings */
+    color: rgba(0, 0, 0, 0.7);
+    border-left: 5px solid #ffc107;
+}
+
+.notification.is-info {
+    background-color: #3e8ed0; /* Blue for info */
+    color: white;
+    border-left: 5px solid #296fa8;
+}
+
+/* Delete button styling */
+.notification .delete {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.notification .delete:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Add icons to notifications */
+.notification::before {
+    font-family: 'FontAwesome';
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.notification.is-primary::before {
+    content: "\f0f3"; /* Bell icon */
+}
+
+.notification.is-success::before {
+    content: "\f00c"; /* Check icon */
+}
+
+.notification.is-danger::before {
+    content: "\f071"; /* Exclamation icon */
+}
+
+.notification.is-warning::before {
+    content: "\f12a"; /* Info icon */
+}
+
+.notification.is-info::before {
+    content: "\f129"; /* Info icon */
+}
+
+/* Animation for notifications */
+@keyframes slideIn {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Dark theme adjustments */
+.is-dark-theme .notification.is-primary {
+    background-color: #9d65c9;
+    border-left-color: #6a4c93;
+}
+
+.is-dark-theme .notification.is-success {
+    background-color: #48c78e;
+    border-left-color: #257953;
+}
+
+.is-dark-theme .notification.is-danger {
+    background-color: #f14668;
+    border-left-color: #cc0f35;
+}
+
+.is-dark-theme .notification.is-warning {
+    background-color: #ffe08a;
+    color: rgba(0, 0, 0, 0.7);
+    border-left-color: #ffdd57;
+}
+
+.is-dark-theme .notification.is-info {
+    background-color: #3e8ed0;
+    border-left-color: #296fa8;
+}
+
+/* Progress bar for auto-hide */
+.notification .auto-hide-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.7);
+    width: 100%;
+    transform-origin: left;
+    animation: progress 5s linear forwards;
+}
+
+@keyframes progress {
+    0% {
+        transform: scaleX(1);
+    }
+    100% {
+        transform: scaleX(0);
+    }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .messages {
+        left: 20px;
+        right: 20px;
+        max-width: calc(100% - 40px);
+    }
+}

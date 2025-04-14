@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Talent Filter{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
     <style>
         /* Custom Theme Colors for Talent Filter */
 
@@ -19,7 +20,7 @@
             --accent: #5e35b1;          /* Accent purple */
 
             --info: #4a9df8;           /* Blue for info */
-            --success: #48bb78;         /* Green for success */
+            --success: #9d65c9;         /* Purple for success (matching secondary) */
             --warning: #f6ad55;         /* Orange for warnings */
             --danger: #e53e3e;          /* Red for danger/errors */
 
@@ -44,7 +45,7 @@
             --accent: #d6bcfa;          /* Accent purple - lighter */
 
             --info: #63b3ed;           /* Blue for info */
-            --success: #68d391;         /* Green for success */
+            --success: #b794f4;         /* Light purple for success (matching highlight) */
             --warning: #f6ad55;         /* Orange for warnings */
             --danger: #fc8181;          /* Red for danger/errors */
 
@@ -110,12 +111,14 @@
         .button.is-success {
             background-color: var(--success);
             border-color: transparent;
+            color: white;
         }
 
         .button.is-success:hover {
             background-color: var(--accent);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             transform: translateY(-1px);
+            color: white;
         }
 
         /* Links */
@@ -243,12 +246,65 @@
         .notification-item {
             border-bottom: 1px solid var(--border-color);
             padding: 0.75rem;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
+        }
+
+        .notification-item p {
+            color: var(--primary); /* Default color for notification text */
+            transition: color 0.2s ease;
         }
 
         .notification-item:hover {
-            background-color: var(--background);
+            background-color: var(--primary); /* Purple background on hover */
         }
+
+        .notification-item:hover p {
+            color: white; /* White text on hover for maximum contrast */
+        }
+
+        .notification-item:hover p.has-text-grey {
+            color: rgba(255, 255, 255, 0.8) !important; /* Lighter white for secondary text */
+        }
+
+        /* User dropdown styling */
+        .navbar-link:not(.is-arrowless)::after {
+            border-color: white !important; /* Make dropdown arrow white */
+        }
+
+        .navbar-item.has-dropdown:hover .navbar-link {
+            background-color: var(--primary-dark) !important; /* Darker purple on hover */
+        }
+
+        /* Style for dropdown items - more specific selectors to override Bulma */
+        .navbar-dropdown {
+            background-color: white !important; /* Ensure dropdown background is white */
+            border-radius: 6px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Dark theme dropdown adjustments */
+        .is-dark-theme .navbar-dropdown {
+            background-color: var(--card-background) !important; /* Use dark card background in dark mode */
+            border: 1px solid var(--border-color);
+        }
+
+        .navbar-dropdown a.navbar-item,
+        .navbar-dropdown .navbar-item span,
+        .navbar-dropdown .navbar-item i {
+            color: var(--primary) !important; /* Purple text for better visibility */
+            font-weight: 500;
+        }
+
+        .navbar-dropdown a.navbar-item:hover {
+            background-color: var(--primary-light) !important; /* Light purple background on hover */
+        }
+
+        .navbar-dropdown a.navbar-item:hover span,
+        .navbar-dropdown a.navbar-item:hover i {
+            color: white !important; /* White text on hover for contrast */
+        }
+
+        /* System notifications styling moved to notifications.css */
 
         .p-2 {
             padding: 0.5rem;
@@ -290,17 +346,16 @@
                         <a class="navbar-item" href="{% url 'ai_recommendations' %}">AI Recommendations</a>
                         <a class="navbar-item" href="{% url 'shortlisted_candidates' %}">Shortlisted Candidates</a>
                         <a class="navbar-item" href="{% url 'reports_analytics' %}">Reports & Analytics</a>
-                        <a class="navbar-item" href="{% url 'settings' %}">Settings</a>
                     {% endif %}
                 {% endif %}
             </div>
 
             <div class="navbar-end">
                 {% if user.is_authenticated %}
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link">
+                <div class="navbar-item has-dropdown is-hoverable" style="padding-top:8px;">
+                    <a class="navbar-item">
                         <span class="icon">
-                            <i class="fas fa-bell"></i>
+                            <i class="fa fa-bell"></i>
                         </span>
                         {% if unread_notifications_count > 0 %}
                         <span class="tag is-danger is-rounded">{{ unread_notifications_count }}</span>
@@ -340,7 +395,7 @@
                         <div class="navbar-item">
                             <a href="{% url 'mark_all_read' %}" class="button is-small is-info is-fullwidth">
                                 <span class="icon is-small">
-                                    <i class="fas fa-check-double"></i>
+                                    <i class="fa fa-check"></i>
                                 </span>
                                 <span>Mark All as Read</span>
                             </a>
@@ -350,18 +405,39 @@
                 {% endif %}
                 <div class="navbar-item">
                     <div class="buttons">
-                        <a id="theme-toggle" class="button is-light theme-toggle" title="Toggle Dark/Light Mode">
-                            <i class="fas fa-moon"></i>
-                        </a>
+                        <!-- <a id="theme-toggle" class="button is-light theme-toggle" title="Toggle Dark/Light Mode">
+                            <i class="fa fa-moon-o"></i>
+                        </a> -->
                         {% if user.is_authenticated %}
-                            <span class="navbar-item">Welcome, {{ user.username }}!</span>
-                            <a class="button is-light" href="{% url 'logout' %}">Logout</a>
+                            <div class="navbar-item has-dropdown is-hoverable">
+                                <a class="navbar-link">
+                                    <span class="icon is-small mr-2">
+                                        <i class="fa fa-user"></i>
+                                    </span>
+                                    <span>Welcome, {{ user.username }}!</span>
+                                </a>
+                                <div class="navbar-dropdown is-right">
+                                    <a href="{% url 'settings' %}" class="navbar-item">
+                                        <span class="icon is-small mr-2">
+                                            <i class="fa fa-cog"></i>
+                                        </span>
+                                        <span>Settings</span>
+                                    </a>
+                                    <hr class="navbar-divider">
+                                    <a class="navbar-item" href="{% url 'logout' %}">
+                                        <span class="icon is-small mr-2">
+                                            <i class="fa fa-sign-out"></i>
+                                        </span>
+                                        <span>Logout</span>
+                                    </a>
+                                </div>
+                            </div>
                         {% else %}
-                            <a class="button is-light" href="{% url 'login' %}">Login</a>
+                            <!-- <a class="button is-light" href="{% url 'login' %}">Login</a>
                             <div class="is-hidden-mobile" style="display: inline-block; margin: 0 5px;"></div>
                             <a class="button is-info" href="{% url 'recruiter_signup' %}">Register as Recruiter</a>
                             <div class="is-hidden-mobile" style="display: inline-block; margin: 0 5px;"></div>
-                            <a class="button is-success" href="{% url 'job_seeker_signup' %}">Register as Job Seeker</a>
+                            <a class="button is-primary" href="{% url 'job_seeker_signup' %}">Register as Job Seeker</a> -->
                         {% endif %}
                     </div>
                 </div>
@@ -369,40 +445,31 @@
         </div>
     </nav>
 
+    <!-- Notifications -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="notification {% if message.tags == 'error' %}is-danger{% elif message.tags == 'success' %}is-success{% elif message.tags == 'warning' %}is-warning{% elif message.tags == 'info' %}is-info{% else %}is-primary{% endif %}">
+            <button class="delete"></button>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Main Content -->
     <section class="section">
         <div class="container">
-            {% if messages %}
-            <div class="messages mb-4">
-                {% for message in messages %}
-                <div class="notification {% if message.tags == 'error' %}is-danger{% else %}is-success{% endif %}">
-                    <button class="delete"></button>
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
             {% block content %}{% endblock %}
         </div>
     </section>
 
-    <script>
-        // Add event listeners to notification delete buttons
-        document.addEventListener('DOMContentLoaded', () => {
-            (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
-                const $notification = $delete.parentNode;
-                $delete.addEventListener('click', () => {
-                    $notification.parentNode.removeChild($notification);
-                });
-            });
-        });
-    </script>
+    <script src="{% static 'js/notifications.js' %}"></script>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" style="padding:2rem 1.5rem 0.5rem">
         <div class="content has-text-centered">
-            <p>© 2023 Talent Filter. All rights reserved.</p>
+            <p>TalentFilter made with ❤️ by AhmedRaza</p>
         </div>
     </footer>
 
@@ -447,7 +514,7 @@
 
                 // Add new icon
                 const iconElement = document.createElement('i');
-                iconElement.className = `fas fa-${icon}`;
+                iconElement.className = `fa fa-${icon}-o`;
                 themeToggle.appendChild(iconElement);
             }
         }

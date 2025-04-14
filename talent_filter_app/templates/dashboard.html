@@ -71,7 +71,7 @@
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'job_listings' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-list"></i></span>
+                        <span class="icon"><i class="fa fa-list"></i></span>
                         <span>View All</span>
                     </a>
                 </footer>
@@ -87,7 +87,7 @@
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'candidate_management' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-user-clock"></i></span>
+                        <span class="icon"><i class="fa fa-user-clock"></i></span>
                         <span>Review</span>
                     </a>
                 </footer>
@@ -112,7 +112,7 @@
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'shortlisted_candidates' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-user-check"></i></span>
+                        <span class="icon"><i class="fa fa-user-check"></i></span>
                         <span>View All</span>
                     </a>
                 </footer>
@@ -128,7 +128,7 @@
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'ai_recommendations' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-robot"></i></span>
+                        <span class="icon"><i class="fa fa-robot"></i></span>
                         <span>View Matches</span>
                     </a>
                 </footer>
@@ -142,7 +142,7 @@
             <div class="card">
                 <header class="card-header">
                     <p class="card-header-title">
-                        <span class="icon mr-2"><i class="fas fa-briefcase"></i></span>
+                        <span class="icon mr-2"><i class="fa fa-briefcase"></i></span>
                         Recent Job Listings
                     </p>
                 </header>
@@ -177,11 +177,11 @@
                                     <td>
                                         <div class="buttons are-small action-buttons">
                                             <a href="{% url 'view_job' job.id %}" class="button is-info">
-                                                <span class="icon"><i class="fas fa-eye"></i></span>
+                                                <span class="icon"><i class="fa fa-eye"></i></span>
                                                 <span>View</span>
                                             </a>
                                             <a href="{% url 'edit_job' job.id %}" class="button is-warning">
-                                                <span class="icon"><i class="fas fa-edit"></i></span>
+                                                <span class="icon"><i class="fa fa-edit"></i></span>
                                                 <span>Edit</span>
                                             </a>
                                         </div>
@@ -199,11 +199,11 @@
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'job_listings' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-list"></i></span>
+                        <span class="icon"><i class="fa fa-list"></i></span>
                         <span>View All Jobs</span>
                     </a>
                     <a href="{% url 'add_job' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-plus"></i></span>
+                        <span class="icon"><i class="fa fa-plus"></i></span>
                         <span>Add New Job</span>
                     </a>
                 </footer>
@@ -217,7 +217,7 @@
             <div class="card">
                 <header class="card-header">
                     <p class="card-header-title">
-                        <span class="icon mr-2"><i class="fas fa-user-clock"></i></span>
+                        <span class="icon mr-2"><i class="fa fa-user-clock"></i></span>
                         Pending Applications
                     </p>
                 </header>
@@ -246,15 +246,15 @@
                                     <td>
                                         <div class="buttons are-small action-buttons">
                                             <button class="button is-success update-status" data-application-id="{{ application.id }}" data-status="Shortlisted">
-                                                <span class="icon"><i class="fas fa-check"></i></span>
+                                                <span class="icon"><i class="fa fa-check"></i></span>
                                                 <span>Shortlist</span>
                                             </button>
                                             <button class="button is-info update-status" data-application-id="{{ application.id }}" data-status="Interview Scheduled">
-                                                <span class="icon"><i class="fas fa-calendar"></i></span>
+                                                <span class="icon"><i class="fa fa-calendar"></i></span>
                                                 <span>Interview</span>
                                             </button>
                                             <button class="button is-danger update-status" data-application-id="{{ application.id }}" data-status="Rejected">
-                                                <span class="icon"><i class="fas fa-times"></i></span>
+                                                <span class="icon"><i class="fa fa-times"></i></span>
                                                 <span>Reject</span>
                                             </button>
                                         </div>
@@ -272,7 +272,7 @@
                 </div>
                 <footer class="card-footer">
                     <a href="{% url 'candidate_management' %}" class="card-footer-item">
-                        <span class="icon"><i class="fas fa-users"></i></span>
+                        <span class="icon"><i class="fa fa-users"></i></span>
                         <span>Manage All Candidates</span>
                     </a>
                 </footer>
@@ -286,7 +286,7 @@
             <div class="card">
                 <header class="card-header">
                     <p class="card-header-title">
-                        <span class="icon mr-2"><i class="fas fa-chart-pie"></i></span>
+                        <span class="icon mr-2"><i class="fa fa-chart-pie"></i></span>
                         Application Status Overview
                     </p>
                 </header>

@@ -108,7 +108,11 @@
                                 <div class="column is-4 has-text-right">
                                     <div class="buttons is-right">
                                         <a href="{% url 'view_job' job.id %}" class="button is-primary">View Details</a>
-                                        <a href="{% url 'apply_to_job' job.id %}" class="button is-info is-light">Apply Now</a>
+                                        {% if job.id in applied_job_ids %}
+                                            <span class="tag is-success is-medium">Applied</span>
+                                        {% else %}
+                                            <a href="{% url 'apply_to_job' job.id %}" class="button is-info is-light">Apply Now</a>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

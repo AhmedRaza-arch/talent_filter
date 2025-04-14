@@ -7,11 +7,21 @@
 
     <div class="tabs">
         <ul>
-            <li class="is-active"><a>All Applications</a></li>
-            <li><a>Pending</a></li>
-            <li><a>Interview Scheduled</a></li>
-            <li><a>Rejected</a></li>
-            <li><a>Hired</a></li>
+            <li class="{% if current_filter == 'All' %}is-active{% endif %}">
+                <a href="{% url 'my_applications' %}">All Applications</a>
+            </li>
+            <li class="{% if current_filter == 'Pending Review' %}is-active{% endif %}">
+                <a href="{% url 'my_applications' %}?status=Pending Review">Pending</a>
+            </li>
+            <li class="{% if current_filter == 'Interview Scheduled' %}is-active{% endif %}">
+                <a href="{% url 'my_applications' %}?status=Interview Scheduled">Interview Scheduled</a>
+            </li>
+            <li class="{% if current_filter == 'Rejected' %}is-active{% endif %}">
+                <a href="{% url 'my_applications' %}?status=Rejected">Rejected</a>
+            </li>
+            <li class="{% if current_filter == 'Hired' %}is-active{% endif %}">
+                <a href="{% url 'my_applications' %}?status=Hired">Hired</a>
+            </li>
         </ul>
     </div>
 
@@ -67,11 +77,11 @@
     {% if applications %}
     <!-- Pagination -->
     <nav class="pagination is-centered" role="navigation" aria-label="pagination">
-        <a class="pagination-previous" {% if applications.has_previous %}href="?page={{ applications.previous_page_number }}"{% else %}disabled{% endif %}>Previous</a>
-        <a class="pagination-next" {% if applications.has_next %}href="?page={{ applications.next_page_number }}"{% else %}disabled{% endif %}>Next page</a>
+        <a class="pagination-previous" {% if applications.has_previous %}href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ applications.previous_page_number }}"{% else %}disabled{% endif %}>Previous</a>
+        <a class="pagination-next" {% if applications.has_next %}href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ applications.next_page_number }}"{% else %}disabled{% endif %}>Next page</a>
         <ul class="pagination-list">
             {% for i in applications.paginator.page_range %}
-            <li><a class="pagination-link {% if applications.number == i %}is-current{% endif %}" aria-label="Page {{ i }}" {% if applications.number != i %}href="?page={{ i }}"{% endif %}>{{ i }}</a></li>
+            <li><a class="pagination-link {% if applications.number == i %}is-current{% endif %}" aria-label="Page {{ i }}" {% if applications.number != i %}href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ i }}"{% endif %}>{{ i }}</a></li>
             {% endfor %}
         </ul>
     </nav>

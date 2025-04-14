@@ -6,8 +6,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
-from .forms import RecruiterSignUpForm, JobSeekerSignUpForm, UserLoginForm, JobForm
-from .models import UserType, Job, Company, Location, Application, Candidate, Notification
+from .forms import RecruiterSignUpForm, JobSeekerSignUpForm, UserLoginForm, JobForm, UserProfileForm, JobSeekerProfileForm, CustomPasswordChangeForm, RecruiterProfileForm
+from .models import UserType, Job, Company, Location, Application, Candidate, Notification, JobSeekerProfile, RecruiterProfile
 
 def login_view(request):
     if request.method == 'POST':
@@ -175,7 +175,90 @@ def job_listings(request):
 
 @login_required
 def candidate_management(request):
-    return render(request, 'candidate_management.html')
+    # Check if user is a recruiter
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_recruiter:
+            return redirect('job_seeker_dashboard')
+    except UserType.DoesNotExist:
+        return redirect('dashboard')
+
+    # Get recruiter profile
+    try:
+        recruiter_profile = request.user.recruiterprofile
+
+        # Get all applications for this recruiter's jobs (unfiltered for counts)
+        all_applications = Application.objects.filter(
+            job__recruiter=recruiter_profile
+        ).select_related('candidate', 'job')
+
+        # Calculate status counts from the unfiltered list
+        status_counts = {
+            'All': all_applications.count(),
+            'Pending_Review': all_applications.filter(status='Pending Review').count(),
+            'Interview_Scheduled': all_applications.filter(status='Interview Scheduled').count(),
+            'Shortlisted': all_applications.filter(status='Shortlisted').count(),
+            'Rejected': all_applications.filter(status='Rejected').count(),
+            'Hired': all_applications.filter(status='Hired').count()
+        }
+
+        # Create a filtered list for display
+        applications_list = all_applications
+
+        # Filter by status if provided
+        status_filter = request.GET.get('status', '')
+        if status_filter:
+            applications_list = applications_list.filter(status=status_filter)
+
+        # Filter by job if provided
+        job_filter = request.GET.get('job', '')
+        if job_filter:
+            applications_list = applications_list.filter(job__id=job_filter)
+
+        # Search functionality
+        search_query = request.GET.get('search', '')
+        if search_query:
+            applications_list = applications_list.filter(
+                candidate__name__icontains=search_query
+            )
+
+        # Order by applied date (most recent first)
+        applications_list = applications_list.order_by('-applied_date')
+
+        # Get all jobs for this recruiter for the job filter dropdown
+        jobs = Job.objects.filter(recruiter=recruiter_profile).order_by('-posted_date')
+
+    except Exception as e:
+        applications_list = []
+        jobs = []
+        status_counts = {
+            'All': 0,
+            'Pending_Review': 0,
+            'Interview_Scheduled': 0,
+            'Shortlisted': 0,
+            'Rejected': 0,
+            'Hired': 0
+        }
+
+    # Pagination
+    paginator = Paginator(applications_list, 10)  # Show 10 applications per page
+    page = request.GET.get('page')
+    applications = paginator.get_page(page)
+
+    # Get the current active filter for highlighting the tab
+    current_filter = request.GET.get('status', 'All')
+    current_job = request.GET.get('job', '')
+
+    context = {
+        'applications': applications,
+        'jobs': jobs,
+        'current_filter': current_filter,
+        'current_job': current_job,
+        'search_query': search_query if 'search_query' in locals() else '',
+        'status_counts': status_counts
+    }
+
+    return render(request, 'candidate_management.html', context)
 
 @login_required
 def ai_recommendations(request):
@@ -183,7 +266,86 @@ def ai_recommendations(request):
 
 @login_required
 def shortlisted_candidates(request):
-    return render(request, 'shortlisted_candidates.html')
+    # Check if user is a recruiter
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_recruiter:
+            return redirect('job_seeker_dashboard')
+    except UserType.DoesNotExist:
+        return redirect('dashboard')
+
+    # Get recruiter profile
+    try:
+        recruiter_profile = request.user.recruiterprofile
+
+        # Get all shortlisted applications for this recruiter's jobs
+        applications_list = Application.objects.filter(
+            job__recruiter=recruiter_profile,
+            status='Shortlisted'
+        ).select_related('candidate', 'job')
+
+        # Filter by job if provided
+        job_filter = request.GET.get('job', '')
+        if job_filter:
+            applications_list = applications_list.filter(job__id=job_filter)
+
+        # Search functionality
+        search_query = request.GET.get('search', '')
+        if search_query:
+            applications_list = applications_list.filter(
+                candidate__name__icontains=search_query
+            )
+
+        # Order by skill match (highest first) and then by applied date (most recent first)
+        applications_list = applications_list.order_by('-candidate__skill_match', '-applied_date')
+
+        # Get all jobs for this recruiter for the job filter dropdown
+        jobs = Job.objects.filter(recruiter=recruiter_profile).order_by('-posted_date')
+
+        # Get shortlisted candidates count by job
+        job_counts = {}
+        for job in jobs:
+            count = Application.objects.filter(
+                job=job,
+                status='Shortlisted'
+            ).count()
+            job_counts[job.id] = count
+
+    except Exception as e:
+        applications_list = []
+        jobs = []
+        job_counts = {}
+
+    # Pagination
+    paginator = Paginator(applications_list, 10)  # Show 10 applications per page
+    page = request.GET.get('page')
+    applications = paginator.get_page(page)
+
+    # Get the current active job filter
+    current_job = request.GET.get('job', '')
+
+    # Get selected candidates for comparison
+    selected_candidates = request.GET.getlist('compare', [])
+    selected_applications = []
+
+    if selected_candidates:
+        selected_applications = Application.objects.filter(
+            id__in=selected_candidates,
+            job__recruiter=recruiter_profile,
+            status='Shortlisted'
+        ).select_related('candidate', 'job')
+
+    context = {
+        'applications': applications,
+        'jobs': jobs,
+        'job_counts': job_counts,
+        'current_job': current_job,
+        'search_query': search_query if 'search_query' in locals() else '',
+        'selected_applications': selected_applications,
+        'total_shortlisted': applications_list.count() if 'applications_list' in locals() else 0
+    }
+
+    return render(request, 'shortlisted_candidates.html', context)
 
 @login_required
 def reports_analytics(request):
@@ -191,7 +353,77 @@ def reports_analytics(request):
 
 @login_required
 def settings(request):
-    return render(request, 'settings.html')
+    # Check if user is a recruiter
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_recruiter:
+            return redirect('job_seeker_profile')
+    except UserType.DoesNotExist:
+        return redirect('dashboard')
+
+    # Get or create recruiter profile
+    recruiter_profile, created = RecruiterProfile.objects.get_or_create(user=request.user)
+
+    # Initialize forms
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'user_profile':
+            user_form = UserProfileForm(request.POST, instance=request.user)
+            if user_form.is_valid():
+                user_form.save()
+                messages.success(request, "Personal information updated successfully!")
+                return redirect('settings')
+
+        elif form_type == 'recruiter_profile':
+            profile_form = RecruiterProfileForm(request.POST, request.FILES, instance=recruiter_profile)
+            if profile_form.is_valid():
+                profile = profile_form.save(commit=False)
+
+                # Handle profile picture upload
+                if 'profile_picture' in request.FILES:
+                    profile.profile_picture = request.FILES['profile_picture']
+
+                profile.save()
+                messages.success(request, "Professional information updated successfully!")
+                return redirect('settings')
+
+        elif form_type == 'password_change':
+            password_form = CustomPasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                messages.success(request, "Password changed successfully!")
+                return redirect('settings')
+
+        # If we get here, there was an error in the form submission
+        # We'll recreate the appropriate form with errors below
+    else:
+        # Initialize all forms with current data
+        user_form = UserProfileForm(instance=request.user)
+        profile_form = RecruiterProfileForm(instance=recruiter_profile)
+        password_form = CustomPasswordChangeForm(request.user)
+
+    # If we're handling a POST request with errors, initialize the non-submitted forms
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        if form_type == 'user_profile':
+            profile_form = RecruiterProfileForm(instance=recruiter_profile)
+            password_form = CustomPasswordChangeForm(request.user)
+        elif form_type == 'recruiter_profile':
+            user_form = UserProfileForm(instance=request.user)
+            password_form = CustomPasswordChangeForm(request.user)
+        elif form_type == 'password_change':
+            user_form = UserProfileForm(instance=request.user)
+            profile_form = RecruiterProfileForm(instance=recruiter_profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'password_form': password_form,
+        'recruiter_profile': recruiter_profile,
+    }
+
+    return render(request, 'settings.html', context)
 
 @login_required
 def add_job(request):
@@ -275,6 +507,7 @@ def view_job(request, job_id):
     # Get applications for this job if the user is a recruiter and owns the job
     applications = []
     is_owner = False
+    has_applied = False
 
     if request.user.is_authenticated:
         try:
@@ -287,13 +520,27 @@ def view_job(request, job_id):
                         applications = Application.objects.filter(job=job).select_related('candidate')
                 except:
                     pass
+            elif user_type.is_job_seeker:
+                # Check if the job seeker has already applied to this job
+                try:
+                    candidates = Candidate.objects.filter(
+                        name=request.user.get_full_name() or request.user.username
+                    )
+                    if candidates.exists():
+                        has_applied = Application.objects.filter(
+                            job=job,
+                            candidate__in=candidates
+                        ).exists()
+                except Exception:
+                    pass
         except UserType.DoesNotExist:
             pass
 
     return render(request, 'view_job.html', {
         'job': job,
         'applications': applications,
-        'is_owner': is_owner
+        'is_owner': is_owner,
+        'has_applied': has_applied
     })
 
 @login_required
@@ -437,7 +684,85 @@ def job_seeker_dashboard(request):
         # If no user type exists, create one as job seeker to prevent loops
         UserType.objects.create(user=request.user, is_job_seeker=True, is_recruiter=False)
 
-    return render(request, 'job_seeker_dashboard.html')
+    # Get available jobs count
+    available_jobs_count = Job.objects.filter(status='Open').count()
+
+    # Get user's applications
+    user_applications = []
+    applications_count = 0
+
+    try:
+        # Get or retrieve candidate record for this job seeker
+        candidates = Candidate.objects.filter(
+            name=request.user.get_full_name() or request.user.username
+        )
+
+        # Get applications for these candidates
+        if candidates.exists():
+            user_applications = Application.objects.filter(candidate__in=candidates)\
+                .select_related('job', 'job__company')\
+                .order_by('-applied_date')[:5]  # Get 5 most recent applications
+
+            applications_count = Application.objects.filter(candidate__in=candidates).count()
+    except Exception as e:
+        print(f"Error fetching applications: {str(e)}")
+
+    # Calculate profile completion percentage
+    profile_completion = 0
+    try:
+        job_seeker_profile = request.user.jobseekerprofile
+
+        # Count completed profile fields
+        completed_fields = 0
+        total_fields = 5  # Total number of important profile fields
+
+        if job_seeker_profile.profile_picture:
+            completed_fields += 1
+        if job_seeker_profile.resume:
+            completed_fields += 1
+        if job_seeker_profile.skills:
+            completed_fields += 1
+        if job_seeker_profile.experience_years > 0:
+            completed_fields += 1
+        if job_seeker_profile.location:
+            completed_fields += 1
+
+        profile_completion = int((completed_fields / total_fields) * 100)
+    except Exception as e:
+        print(f"Error calculating profile completion: {str(e)}")
+
+    # Get recent job listings
+    recent_jobs = Job.objects.filter(status='Open').select_related('company', 'company__location')\
+        .order_by('-posted_date')[:5]  # Get 5 most recent jobs
+
+    # Create a set of job IDs that the user has already applied for
+    applied_job_ids = set()
+
+    # Get candidate record for this job seeker if not already retrieved
+    if 'candidates' not in locals():
+        try:
+            candidates = Candidate.objects.filter(
+                name=request.user.get_full_name() or request.user.username
+            )
+        except Exception:
+            candidates = Candidate.objects.none()
+
+    # Check if candidates exist
+    if candidates.exists():
+        # Get all jobs the user has applied for
+        applied_job_ids = set(Application.objects.filter(candidate__in=candidates)\
+            .values_list('job_id', flat=True))
+
+    context = {
+        'available_jobs_count': available_jobs_count,
+        'applications_count': applications_count,
+        'profile_completion': profile_completion,
+        'recent_jobs': recent_jobs,
+        'recent_applications': user_applications,
+        'applied_job_ids': applied_job_ids,
+    }
+
+    return render(request, 'job_seeker_dashboard.html', context)
 
 @login_required
 def available_jobs(request):
@@ -485,6 +810,20 @@ def available_jobs(request):
     employment_types = Job.objects.values_list('employment_type', flat=True).distinct()
     workplace_types = Job.objects.values_list('workplace_type', flat=True).distinct()
 
+    # Get candidate record for this job seeker
+    applied_job_ids = set()
+    try:
+        candidates = Candidate.objects.filter(
+            name=request.user.get_full_name() or request.user.username
+        )
+
+        # Get all jobs the user has applied for
+        if candidates.exists():
+            applied_job_ids = set(Application.objects.filter(candidate__in=candidates)\
+                .values_list('job_id', flat=True))
+    except Exception:
+        pass
+
     # Pagination
     paginator = Paginator(jobs_list, 10)  # Show 10 jobs per page
     page = request.GET.get('page')
@@ -495,6 +834,7 @@ def available_jobs(request):
         'employment_types': employment_types,
         'workplace_types': workplace_types,
         'filters': request.GET,
+        'applied_job_ids': applied_job_ids,
     }
 
     return render(request, 'available_jobs.html', context)
@@ -585,6 +925,11 @@ def my_applications(request):
         # Get applications for these candidates
         applications_list = Application.objects.filter(candidate__in=candidates).select_related('job', 'job__company').order_by('-applied_date')
 
+        # Filter by status if provided
+        status_filter = request.GET.get('status', '')
+        if status_filter:
+            applications_list = applications_list.filter(status=status_filter)
+
     except Exception:
         applications_list = []
 
@@ -593,7 +938,13 @@ def my_applications(request):
     page = request.GET.get('page')
     applications = paginator.get_page(page)
 
-    return render(request, 'my_applications.html', {'applications': applications})
+    # Get the current active filter for highlighting the tab
+    current_filter = request.GET.get('status', 'All')
+
+    return render(request, 'my_applications.html', {
+        'applications': applications,
+        'current_filter': current_filter
+    })
 
 @login_required
 def withdraw_application(request, application_id):
@@ -638,7 +989,112 @@ def job_seeker_profile(request):
             return redirect('dashboard')
     except UserType.DoesNotExist:
         pass
-    return render(request, 'job_seeker_profile.html')
+
+    # Get or create job seeker profile
+    job_seeker_profile, created = JobSeekerProfile.objects.get_or_create(user=request.user)
+
+    # Calculate profile completion percentage
+    profile_completion = calculate_profile_completion(request.user, job_seeker_profile)
+
+    # Print debug information
+    if job_seeker_profile.profile_picture:
+        print(f"Profile picture URL: {job_seeker_profile.profile_picture.url}")
+
+    # Initialize forms
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'user_profile':
+            user_form = UserProfileForm(request.POST, instance=request.user)
+            if user_form.is_valid():
+                user_form.save()
+                messages.success(request, "Personal information updated successfully!")
+                return redirect('job_seeker_profile')
+
+        elif form_type == 'job_seeker_profile':
+            profile_form = JobSeekerProfileForm(request.POST, request.FILES, instance=job_seeker_profile)
+            if profile_form.is_valid():
+                profile = profile_form.save(commit=False)
+
+                # Handle profile picture upload
+                if 'profile_picture' in request.FILES:
+                    profile.profile_picture = request.FILES['profile_picture']
+                    print(f"Uploaded profile picture: {profile.profile_picture.name}")
+
+                # Handle resume upload
+                if 'resume' in request.FILES:
+                    profile.resume = request.FILES['resume']
+                    print(f"Uploaded resume: {profile.resume.name}")
+
+                profile.save()
+                messages.success(request, "Professional information updated successfully!")
+                return redirect('job_seeker_profile')
+
+        elif form_type == 'password_change':
+            password_form = CustomPasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                messages.success(request, "Password changed successfully!")
+                return redirect('job_seeker_profile')
+
+        # If we get here, there was an error in the form submission
+        # We'll recreate the appropriate form with errors below
+    else:
+        # Initialize all forms with current data
+        user_form = UserProfileForm(instance=request.user)
+        profile_form = JobSeekerProfileForm(instance=job_seeker_profile)
+        password_form = CustomPasswordChangeForm(request.user)
+
+    # If we're handling a POST request with errors, initialize the non-submitted forms
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        if form_type == 'user_profile':
+            profile_form = JobSeekerProfileForm(instance=job_seeker_profile)
+            password_form = CustomPasswordChangeForm(request.user)
+        elif form_type == 'job_seeker_profile':
+            user_form = UserProfileForm(instance=request.user)
+            password_form = CustomPasswordChangeForm(request.user)
+        elif form_type == 'password_change':
+            user_form = UserProfileForm(instance=request.user)
+            profile_form = JobSeekerProfileForm(instance=job_seeker_profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'password_form': password_form,
+        'profile_completion': profile_completion,
+        'job_seeker_profile': job_seeker_profile,
+    }
+
+    return render(request, 'job_seeker_profile.html', context)
+
+# Helper function to calculate profile completion
+def calculate_profile_completion(user, profile):
+    """Calculate the profile completion percentage"""
+    completed_fields = 0
+    total_fields = 8  # Total number of important profile fields
+
+    # User model fields
+    if user.first_name:
+        completed_fields += 1
+    if user.last_name:
+        completed_fields += 1
+    if user.email:
+        completed_fields += 1
+
+    # JobSeekerProfile fields
+    if profile.profile_picture:
+        completed_fields += 1
+    if profile.resume:
+        completed_fields += 1
+    if profile.skills:
+        completed_fields += 1
+    if profile.experience_years > 0:
+        completed_fields += 1
+    if profile.location:
+        completed_fields += 1
+
+    return int((completed_fields / total_fields) * 100)
 
 @login_required
 def notifications_list(request):
