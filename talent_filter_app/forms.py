@@ -50,11 +50,6 @@ class RecruiterSignUpForm(UserCreationForm):
 
 class JobSeekerSignUpForm(UserCreationForm):
     """Form for job seeker registration"""
-    skills = forms.CharField(widget=forms.Textarea, required=False)
-    experience_years = forms.FloatField(required=False, min_value=0)
-    education = forms.CharField(widget=forms.Textarea, required=False)
-    location = forms.CharField(max_length=100, required=False)
-
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
@@ -70,13 +65,9 @@ class JobSeekerSignUpForm(UserCreationForm):
 
         if commit:
             user.save()
-            # Create or update the user's profile
+            # Create a minimal profile - details will be filled in later
             job_seeker_profile = JobSeekerProfile.objects.create(
-                user=user,
-                skills=self.cleaned_data['skills'],
-                experience_years=self.cleaned_data['experience_years'],
-                education=self.cleaned_data['education'],
-                location=self.cleaned_data['location']
+                user=user
             )
 
             # Set user type

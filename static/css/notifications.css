@@ -34,9 +34,9 @@
 }
 
 .notification.is-success {
-    background-color: #48c774; /* Green for success */
+    background-color: #9d65c9; /* Purple for success (matching secondary) */
     color: white;
-    border-left: 5px solid #257942;
+    border-left: 5px solid #6a4c93; /* Darker purple border */
 }
 
 .notification.is-danger {
@@ -124,8 +124,8 @@
 }
 
 .is-dark-theme .notification.is-success {
-    background-color: #48c78e;
-    border-left-color: #257953;
+    background-color: #b794f4; /* Lighter purple for dark mode */
+    border-left-color: #9d65c9; /* Medium purple border */
 }
 
 .is-dark-theme .notification.is-danger {
@@ -153,7 +153,7 @@
     background-color: rgba(255, 255, 255, 0.7);
     width: 100%;
     transform-origin: left;
-    animation: progress 5s linear forwards;
+    animation: progress 7s linear forwards;
 }
 
 @keyframes progress {

@@ -1,3 +1,5 @@
+import os
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
@@ -6,8 +8,10 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
+from django.conf import settings
 from .forms import RecruiterSignUpForm, JobSeekerSignUpForm, UserLoginForm, JobForm, UserProfileForm, JobSeekerProfileForm, CustomPasswordChangeForm, RecruiterProfileForm
 from .models import UserType, Job, Company, Location, Application, Candidate, Notification, JobSeekerProfile, RecruiterProfile
+from .utils import extract_resume_data_from_api, analyze_resume_job_match, read_resume_file
 
 def login_view(request):
     if request.method == 'POST':
@@ -56,8 +60,8 @@ def job_seeker_signup(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "Registration successful!")
-            return redirect('job_seeker_dashboard')
+            messages.success(request, "Registration successful! Please complete your profile to continue.")
+            return redirect('job_seeker_profile')
         else:
             messages.error(request, "Registration failed. Please check the form.")
     else:
@@ -996,6 +1000,9 @@ def job_seeker_profile(request):
     # Calculate profile completion percentage
     profile_completion = calculate_profile_completion(request.user, job_seeker_profile)
 
+    # Check if this is a new profile with minimal information
+    is_new_profile = (profile_completion < 25)
+
     # Print debug information
     if job_seeker_profile.profile_picture:
         print(f"Profile picture URL: {job_seeker_profile.profile_picture.url}")
@@ -1012,23 +1019,33 @@ def job_seeker_profile(request):
                 return redirect('job_seeker_profile')
 
         elif form_type == 'job_seeker_profile':
-            profile_form = JobSeekerProfileForm(request.POST, request.FILES, instance=job_seeker_profile)
-            if profile_form.is_valid():
-                profile = profile_form.save(commit=False)
+            # Check if this is the upload form or the professional info form
+            is_upload_form = 'upload-form' in request.POST.get('form_id', '')
 
-                # Handle profile picture upload
+            if is_upload_form:
+                # Handle file uploads directly
                 if 'profile_picture' in request.FILES:
-                    profile.profile_picture = request.FILES['profile_picture']
-                    print(f"Uploaded profile picture: {profile.profile_picture.name}")
+                    job_seeker_profile.profile_picture = request.FILES['profile_picture']
+                    print(f"Uploaded profile picture: {job_seeker_profile.profile_picture.name}")
 
-                # Handle resume upload
                 if 'resume' in request.FILES:
-                    profile.resume = request.FILES['resume']
-                    print(f"Uploaded resume: {profile.resume.name}")
+                    job_seeker_profile.resume = request.FILES['resume']
+                    print(f"Uploaded resume: {job_seeker_profile.resume.name}")
+                    # Suggest using AI extraction
+                    messages.info(request, "Resume uploaded! Use the 'Extract Data with AI' button to automatically fill your profile.")
 
-                profile.save()
-                messages.success(request, "Professional information updated successfully!")
-                return redirect('job_seeker_profile')
+                job_seeker_profile.save()
+                messages.success(request, "Files uploaded successfully!")
+            else:
+                # Handle professional info update (excluding file fields)
+                profile_form = JobSeekerProfileForm(request.POST, instance=job_seeker_profile)
+                if profile_form.is_valid():
+                    profile = profile_form.save(commit=False)
+                    # Don't touch the file fields
+                    profile.save()
+                    messages.success(request, "Professional information updated successfully!")
+
+            return redirect('job_seeker_profile')
 
         elif form_type == 'password_change':
             password_form = CustomPasswordChangeForm(request.user, request.POST)
@@ -1064,6 +1081,7 @@ def job_seeker_profile(request):
         'password_form': password_form,
         'profile_completion': profile_completion,
         'job_seeker_profile': job_seeker_profile,
+        'is_new_profile': is_new_profile,
     }
 
     return render(request, 'job_seeker_profile.html', context)
@@ -1149,3 +1167,151 @@ def create_notification(recipient, message, notification_type, sender=None, rela
         related_link=related_link
     )
     return notification
+
+@login_required
+def analyze_job_match(request, job_id):
+    """Analyze the match between a job seeker's resume and a job description"""
+    # Check if user is a job seeker
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_job_seeker:
+            return JsonResponse({'status': 'error', 'message': 'Only job seekers can analyze job matches'})
+    except UserType.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User type not found'})
+
+    # Get the job
+    try:
+        job = Job.objects.get(id=job_id)
+    except Job.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Job not found'})
+
+    # Get job seeker profile
+    try:
+        job_seeker_profile = JobSeekerProfile.objects.get(user=request.user)
+
+        # Check if resume exists
+        if not job_seeker_profile.resume:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Please upload a resume before analyzing job matches'
+            })
+
+        # Read the resume file
+        resume_path = os.path.join(settings.MEDIA_ROOT, str(job_seeker_profile.resume))
+        resume_text = read_resume_file(resume_path)
+
+        if resume_text.startswith("Error:"):
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error reading resume: {resume_text}'
+            })
+
+        # Prepare job description text
+        job_description = f"""Job Title: {job.job_title}
+        Company: {job.company.name}
+        Location: {job.company.location.city}, {job.company.location.state}, {job.company.location.country}
+        Workplace Type: {job.workplace_type}
+        Employment Type: {job.employment_type}
+        Experience Required: {job.experience_required}
+
+        Summary:
+        {job.summary}
+
+        Key Responsibilities:
+        {', '.join(job.get_key_responsibilities())}
+
+        Requirements:
+        {', '.join(job.get_requirements())}
+
+        Skills Required:
+        {', '.join(job.get_skills_required())}
+        """
+
+        # Call the AI service to analyze the match
+        analysis_result = analyze_resume_job_match(resume_text, job_description)
+
+        if not analysis_result:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Failed to analyze job match. Please try again later.'
+            })
+
+        # Return the analysis result
+        return JsonResponse({
+            'status': 'success',
+            'result': analysis_result
+        })
+
+    except JobSeekerProfile.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Profile not found'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Error analyzing job match: {str(e)}'})
+
+@login_required
+def extract_resume_data(request):
+    """Extract data from resume using AI"""
+    # Check if user is a job seeker
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_job_seeker:
+            return redirect('dashboard')
+    except UserType.DoesNotExist:
+        pass
+
+    # For AJAX requests to check status
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == 'GET':
+        # Return the current extraction status
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Extraction in progress...'
+        })
+
+    # Get job seeker profile
+    try:
+        job_seeker_profile = JobSeekerProfile.objects.get(user=request.user)
+
+        # Check if resume exists
+        if not job_seeker_profile.resume:
+            messages.error(request, "Please upload a resume before using the AI extraction feature.")
+            return redirect('job_seeker_profile')
+
+        # Call the API to extract data from the resume
+        resume_path = str(job_seeker_profile.resume)
+        extracted_data = extract_resume_data_from_api(resume_path)
+
+        if not extracted_data:
+            messages.error(request, "Failed to extract data from your resume. Please try again later.")
+            return redirect('job_seeker_profile')
+
+        # Update the profile with extracted data
+        if 'skills' in extracted_data and extracted_data['skills']:
+            job_seeker_profile.skills = extracted_data['skills']
+
+        if 'education' in extracted_data and extracted_data['education']:
+            job_seeker_profile.education = extracted_data['education']
+
+        if 'experience_years' in extracted_data and extracted_data['experience_years']:
+            job_seeker_profile.experience_years = extracted_data['experience_years']
+
+        if 'location' in extracted_data and extracted_data['location']:
+            job_seeker_profile.location = extracted_data['location']
+
+        job_seeker_profile.save()
+
+        # Count how many fields were successfully extracted
+        successful_fields = sum(1 for field in ['skills', 'education', 'experience_years', 'location']
+                               if field in extracted_data and extracted_data[field])
+
+        if successful_fields == 4:
+            messages.success(request, "Successfully extracted all information from your resume!")
+        elif successful_fields > 0:
+            messages.success(request, f"Successfully extracted {successful_fields} out of 4 information fields from your resume.")
+        else:
+            messages.warning(request, "We couldn't extract meaningful information from your resume. Please update your profile manually.")
+
+    except JobSeekerProfile.DoesNotExist:
+        messages.error(request, "Profile not found.")
+    except Exception as e:
+        messages.error(request, f"Error extracting data: {str(e)}")
+
+    return redirect('job_seeker_profile')

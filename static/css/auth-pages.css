@@ -203,6 +203,13 @@ body {
     .login-background {
         padding: 1.5rem 0;
     }
+
+    .login-background .tagline {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding: 0 1rem;
+        /* Font weight remains the same */
+    }
 }
 
 /* Additional responsive adjustments */
@@ -233,6 +240,40 @@ body {
     border-top: 1px solid rgba(74, 85, 104, 0.3);
 }
 
+/* Welcome message styling */
+.login-background .title.is-4.has-text-white {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Subtitle styling */
+.login-background .subtitle.is-6.has-text-white {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    margin-bottom: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+/* Tagline styling with Dancing Script font */
+.login-background .tagline {
+    font-family: "Dancing Script", cursive;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 2rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 2rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.98);
+    padding: 0 1.5rem;
+}
+
 /* Specific header colors */
 .login-header {
     background-color: var(--primary);
@@ -254,6 +295,13 @@ body {
 /* Add spacing for error messages */
 .login-card .notification {
     margin-bottom: 1rem;
+}
+
+/* Override success notification color to match theme */
+.notification.is-success {
+    background-color: #9d65c9 !important; /* Purple for success (matching secondary) */
+    color: white !important;
+    border-left: 5px solid #6a4c93 !important; /* Darker purple border */
 }
 
 /* Ensure card has proper spacing */

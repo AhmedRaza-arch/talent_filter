@@ -53,6 +53,15 @@
         </div>
 
         <div class="column is-9">
+            {% if is_new_profile %}
+                <div class="notification is-info">
+                    <button class="delete"></button>
+                    <p><strong>Welcome to Talent Filter!</strong></p>
+                    <p>Please complete your profile information below to help recruiters find you and match you with suitable job opportunities.</p>
+                    <p>The more details you provide, the better your job matches will be!</p>
+                </div>
+            {% endif %}
+
             {% if messages %}
                 {% for message in messages %}
                     <div class="notification is-{{ message.tags }}">
@@ -112,12 +121,102 @@
 
             <div class="card mt-4">
                 <div class="card-header">
+                    <p class="card-header-title">Resume & Profile Picture</p>
+                </div>
+                <div class="card-content">
+                    <form method="post" enctype="multipart/form-data" id="upload-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="job_seeker_profile">
+                        <input type="hidden" name="form_id" value="upload-form">
+
+                        <div class="columns">
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Profile Picture</label>
+                                    <div class="control">
+                                        <div class="file has-name">
+                                            <label class="file-label">
+                                                <input type="file" name="profile_picture" class="file-input" accept="image/*">
+                                                <span class="file-cta">
+                                                    <span class="file-icon">
+                                                        <i class="fa fa-upload"></i>
+                                                    </span>
+                                                    <span class="file-label">Choose a file…</span>
+                                                </span>
+                                                <span class="file-name">
+                                                    {% if job_seeker_profile.profile_picture %}
+                                                        Current: {{ job_seeker_profile.profile_picture|filename }}
+                                                    {% else %}
+                                                        No file selected
+                                                    {% endif %}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Resume</label>
+                                    <div class="file has-name">
+                                        <label class="file-label">
+                                            <input type="file" name="resume" class="file-input" accept=".pdf,.doc,.docx">
+                                            <span class="file-cta">
+                                                <span class="file-icon">
+                                                    <i class="fa fa-upload"></i>
+                                                </span>
+                                                <span class="file-label">Choose a file…</span>
+                                            </span>
+                                            <span class="file-name">
+                                                {% if job_seeker_profile.resume %}
+                                                    Current: {{ job_seeker_profile.resume|filename }}
+                                                {% else %}
+                                                    No file selected
+                                                {% endif %}
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <p class="help is-info mt-2">
+                                        <span class="icon is-small"><i class="fa fa-robot"></i></span>
+                                        <span>Upload your resume to use our AI service to automatically extract your skills, education, experience, and location!</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field is-grouped">
+                            <div class="control">
+                                <button type="submit" class="button is-primary">
+                                    <span class="icon">
+                                        <i class="fa fa-save"></i>
+                                    </span>
+                                    <span>Save Files</span>
+                                </button>
+                            </div>
+                            {% if job_seeker_profile.resume %}
+                            <div class="control">
+                                <button id="extract-resume-btn" class="button is-info">
+                                    <span class="icon">
+                                        <i class="fa fa-robot"></i>
+                                    </span>
+                                    <span>Extract Data with AI</span>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
                     <p class="card-header-title">Professional Information</p>
                 </div>
                 <div class="card-content">
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="form_type" value="job_seeker_profile">
+                        <!-- We don't include profile_picture and resume fields here as they're handled in the upload form -->
 
                         <div class="field">
                             <label class="label">Skills</label>
@@ -157,58 +256,6 @@
                             </div>
                             {% if profile_form.location.errors %}
                                 <p class="help is-danger">{{ profile_form.location.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-
-                        <div class="field">
-                            <label class="label">Profile Picture</label>
-                            <div class="control">
-                                <div class="file has-name">
-                                    <label class="file-label">
-                                        {{ profile_form.profile_picture }}
-                                        <span class="file-cta">
-                                            <span class="file-icon">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            <span class="file-label">Choose a file…</span>
-                                        </span>
-                                        <span class="file-name">
-                                            {% if job_seeker_profile.profile_picture %}
-                                                Current: {{ job_seeker_profile.profile_picture|filename }}
-                                            {% else %}
-                                                No file selected
-                                            {% endif %}
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                            {% if profile_form.profile_picture.errors %}
-                                <p class="help is-danger">{{ profile_form.profile_picture.errors.0 }}</p>
-                            {% endif %}
-                        </div>
-
-                        <div class="field">
-                            <label class="label">Resume</label>
-                            <div class="file has-name">
-                                <label class="file-label">
-                                    {{ profile_form.resume }}
-                                    <span class="file-cta">
-                                        <span class="file-icon">
-                                            <i class="fa fa-upload"></i>
-                                        </span>
-                                        <span class="file-label">Choose a file…</span>
-                                    </span>
-                                    <span class="file-name">
-                                        {% if job_seeker_profile.resume %}
-                                            Current: {{ job_seeker_profile.resume|filename }}
-                                        {% else %}
-                                            No file selected
-                                        {% endif %}
-                                    </span>
-                                </label>
-                            </div>
-                            {% if profile_form.resume.errors %}
-                                <p class="help is-danger">{{ profile_form.resume.errors.0 }}</p>
                             {% endif %}
                         </div>
 
@@ -290,6 +337,254 @@
                 button.parentNode.remove();
             });
         });
+
+        // Make sure we don't have duplicate file inputs
+        // This ensures we only have one set of file inputs on the page
+        const allForms = document.querySelectorAll('form');
+        let foundResume = false;
+        let foundProfilePic = false;
+
+        allForms.forEach(form => {
+            if (form.id !== 'upload-form') {
+                const resumeInputs = form.querySelectorAll('input[name="resume"]');
+                const profilePicInputs = form.querySelectorAll('input[name="profile_picture"]');
+
+                resumeInputs.forEach(input => {
+                    if (foundResume) {
+                        input.parentNode.removeChild(input);
+                    } else {
+                        foundResume = true;
+                    }
+                });
+
+                profilePicInputs.forEach(input => {
+                    if (foundProfilePic) {
+                        input.parentNode.removeChild(input);
+                    } else {
+                        foundProfilePic = true;
+                    }
+                });
+            }
+        });
+
+        // Handle the extract resume button click
+        const extractResumeBtn = document.getElementById('extract-resume-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const extractionProgress = document.getElementById('extraction-progress');
+
+        // Function to update the extraction step status
+        function updateStep(stepId, status, message = null) {
+            const step = document.getElementById(stepId);
+            const statusIcon = step.querySelector('.step-status i');
+
+            // Remove all status classes
+            step.classList.remove('active', 'completed', 'error');
+
+            // Update based on status
+            if (status === 'active') {
+                step.classList.add('active');
+                statusIcon.className = 'fa fa-spinner fa-spin';
+            } else if (status === 'completed') {
+                step.classList.add('completed');
+                statusIcon.className = 'fa fa-check';
+            } else if (status === 'error') {
+                step.classList.add('error');
+                statusIcon.className = 'fa fa-times';
+                if (message) {
+                    const statusText = document.getElementById('extraction-status');
+                    statusText.textContent = message;
+                }
+            } else if (status === 'waiting') {
+                statusIcon.className = 'fa fa-clock';
+            }
+        }
+
+        // Function to simulate the extraction process
+        function simulateExtractionProcess() {
+            const steps = [
+                { id: 'step-reading', delay: 1000 },
+                { id: 'step-skills', delay: 2000 },
+                { id: 'step-education', delay: 2000 },
+                { id: 'step-experience', delay: 2000 },
+                { id: 'step-location', delay: 2000 },
+                { id: 'step-saving', delay: 1000 }
+            ];
+
+            let currentStep = 0;
+            const totalSteps = steps.length;
+
+            // Reset all steps to waiting
+            steps.forEach(step => updateStep(step.id, 'waiting'));
+
+            // Start with the first step
+            updateStep(steps[currentStep].id, 'active');
+            extractionProgress.value = (currentStep / totalSteps) * 100;
+
+            // Process each step with a delay
+            function processNextStep() {
+                if (currentStep < totalSteps) {
+                    // Complete the current step
+                    updateStep(steps[currentStep].id, 'completed');
+                    currentStep++;
+                    extractionProgress.value = (currentStep / totalSteps) * 100;
+
+                    if (currentStep < totalSteps) {
+                        // Start the next step
+                        updateStep(steps[currentStep].id, 'active');
+                        setTimeout(processNextStep, steps[currentStep].delay);
+                    } else {
+                        // All steps completed, redirect to see results
+                        setTimeout(() => {
+                            window.location.href = '{% url "job_seeker_profile" %}';
+                        }, 500);
+                    }
+                }
+            }
+
+            // Start the process after the first step delay
+            setTimeout(processNextStep, steps[currentStep].delay);
+        }
+
+        if (extractResumeBtn) {
+            extractResumeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Show the loading overlay
+                loadingOverlay.classList.add('is-active');
+
+                // Disable the button to prevent multiple clicks
+                extractResumeBtn.disabled = true;
+                extractResumeBtn.classList.add('is-loading');
+
+                // Start the extraction process simulation
+                simulateExtractionProcess();
+
+                // Make the AJAX request to extract resume data
+                fetch('{% url "extract_resume_data" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingOverlay.classList.remove('is-active');
+                    extractResumeBtn.disabled = false;
+                    extractResumeBtn.classList.remove('is-loading');
+                    alert('An error occurred while extracting data from your resume. Please try again later.');
+                });
+            });
+        }
     });
 </script>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="modal" style="display: none;">
+    <div class="modal-background"></div>
+    <div class="modal-content has-text-centered">
+        <div class="box">
+            <p class="title is-4">Processing Resume</p>
+            <p id="extraction-status" class="subtitle is-6 mb-4">Please wait while we extract information from your resume...</p>
+            <div class="extraction-steps">
+                <div class="step" id="step-reading">
+                    <span class="icon"><i class="fa fa-file-alt"></i></span>
+                    <span class="step-text">Reading resume file</span>
+                    <span class="step-status"><i class="fa fa-spinner fa-spin"></i></span>
+                </div>
+                <div class="step" id="step-skills">
+                    <span class="icon"><i class="fa fa-tools"></i></span>
+                    <span class="step-text">Extracting skills</span>
+                    <span class="step-status"><i class="fa fa-clock"></i></span>
+                </div>
+                <div class="step" id="step-education">
+                    <span class="icon"><i class="fa fa-graduation-cap"></i></span>
+                    <span class="step-text">Extracting education</span>
+                    <span class="step-status"><i class="fa fa-clock"></i></span>
+                </div>
+                <div class="step" id="step-experience">
+                    <span class="icon"><i class="fa fa-briefcase"></i></span>
+                    <span class="step-text">Extracting experience</span>
+                    <span class="step-status"><i class="fa fa-clock"></i></span>
+                </div>
+                <div class="step" id="step-location">
+                    <span class="icon"><i class="fa fa-map-marker-alt"></i></span>
+                    <span class="step-text">Extracting location</span>
+                    <span class="step-status"><i class="fa fa-clock"></i></span>
+                </div>
+                <div class="step" id="step-saving">
+                    <span class="icon"><i class="fa fa-save"></i></span>
+                    <span class="step-text">Saving profile</span>
+                    <span class="step-status"><i class="fa fa-clock"></i></span>
+                </div>
+            </div>
+            <progress class="progress is-primary mt-4" max="100" value="0" id="extraction-progress"></progress>
+        </div>
+    </div>
+</div>
+
+<style>
+    .is-pulsing {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(72, 95, 199, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(72, 95, 199, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(72, 95, 199, 0);
+        }
+    }
+
+    #loading-overlay.is-active {
+        display: flex !important;
+    }
+
+    .extraction-steps {
+        text-align: left;
+        margin: 1rem 0;
+    }
+
+    .extraction-steps .step {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .extraction-steps .step:last-child {
+        border-bottom: none;
+    }
+
+    .extraction-steps .step .icon {
+        margin-right: 0.5rem;
+        width: 24px;
+        text-align: center;
+    }
+
+    .extraction-steps .step .step-text {
+        flex-grow: 1;
+    }
+
+    .extraction-steps .step .step-status {
+        margin-left: 0.5rem;
+    }
+
+    .extraction-steps .step.active {
+        font-weight: bold;
+        color: #485fc7;
+    }
+
+    .extraction-steps .step.completed .step-status i {
+        color: #48c774;
+    }
+
+    .extraction-steps .step.error .step-status i {
+        color: #f14668;
+    }
+</style>
 {% endblock %}

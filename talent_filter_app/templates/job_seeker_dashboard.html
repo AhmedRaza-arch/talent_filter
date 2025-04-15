@@ -6,7 +6,7 @@
     <h1 class="title">Welcome, {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}!</h1>
     <p class="subtitle">Here's an overview of your job search activity</p>
 
-    <!-- Custom CSS for equal height cards -->
+    <!-- Custom CSS for equal height cards and consistent button/tag styling -->
     <style>
         .dashboard-card {
             height: 100%;
@@ -22,6 +22,68 @@
         }
         .dashboard-card .progress-container {
             margin-top: 0.5rem;
+        }
+
+        /* Make tags look like buttons when inside button groups */
+        .buttons .tag {
+            height: 2em;
+            padding-left: 0.75em;
+            padding-right: 0.75em;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        /* Specific styling for success tags to match buttons */
+        .tag.is-success,
+        span.tag.is-success,
+        .buttons .tag.is-success,
+        table .tag.is-success {
+            background-color: var(--primary) !important; /* Using primary purple instead of green */
+            color: white !important;
+        }
+
+        /* Consistent styling for status tags in tables */
+        table .tag {
+            padding-left: 0.75em;
+            padding-right: 0.75em;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Custom colors for different status tags */
+        .tag.is-warning,
+        span.tag.is-warning,
+        table .tag.is-warning {
+            background-color: var(--warning) !important;
+            color: rgba(0, 0, 0, 0.7) !important; /* Darker text for better readability on yellow */
+        }
+
+        .tag.is-info,
+        span.tag.is-info,
+        table .tag.is-info {
+            background-color: var(--info) !important;
+            color: white !important;
+        }
+
+        .tag.is-danger,
+        span.tag.is-danger,
+        table .tag.is-danger {
+            background-color: var(--danger) !important;
+            color: white !important;
+        }
+
+        .tag.is-primary,
+        span.tag.is-primary,
+        table .tag.is-primary {
+            background-color: var(--secondary) !important; /* Using secondary purple for hired status */
+            color: white !important;
         }
     </style>
 
@@ -102,7 +164,7 @@
                                 <td>
                                     <div class="buttons are-small">
                                         {% if job.id in applied_job_ids %}
-                                            <span class="tag is-success">Applied</span>
+                                            <span class="tag is-primary">Applied</span>
                                         {% else %}
                                             <a href="{% url 'apply_to_job' job.id %}" class="button is-primary">Apply</a>
                                         {% endif %}
@@ -160,7 +222,7 @@
                                 <td>
                                     <span class="tag
                                         {% if application.status == 'Pending Review' %}is-warning
-                                        {% elif application.status == 'Interview Scheduled' %}is-success
+                                        {% elif application.status == 'Interview Scheduled' %}is-primary
                                         {% elif application.status == 'Shortlisted' %}is-info
                                         {% elif application.status == 'Rejected' %}is-danger
                                         {% elif application.status == 'Hired' %}is-primary

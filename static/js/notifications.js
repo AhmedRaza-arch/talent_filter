@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Auto-hide after 5 seconds
+        // Auto-hide after 7 seconds
         setTimeout(() => {
             hideNotification(notification);
-        }, 5000);
+        }, 7000);
     });
 
     // Function to hide notification with animation
@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 });
                             }
 
-                            // Auto-hide after 5 seconds
+                            // Auto-hide after 7 seconds
                             setTimeout(() => {
                                 hideNotification(node);
-                            }, 5000);
+                            }, 7000);
                         }
                     });
                 }

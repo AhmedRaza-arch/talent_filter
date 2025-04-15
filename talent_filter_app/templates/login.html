@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/auth-pages.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block extra_js %}
@@ -15,6 +16,11 @@
 <!-- Custom login background with the SVG pattern -->
 <div class="login-background">
     <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-full has-text-centered mb-4">
+                <p class="subtitle is-6 has-text-white tagline">Connecting top recruiters with the right talent—faster, smarter, and effortlessly.</p>
+            </div>
+        </div>
         <div class="columns is-centered">
             <div class="column is-two-thirds-tablet is-half-desktop">
                 <div class="card login-card">
@@ -39,19 +45,19 @@
                     </div>
                     <div class="card-footer">
                         <div class="card-footer-item is-flex is-flex-direction-column">
-                            <p class="mb-2">Don't have an account?</p>
+                            <p class="mb-2">Don't have an account? Register here,</p>
                             <div class="is-flex">
                                 <a class="button is-info" href="{% url 'recruiter_signup' %}">
                                     <span class="icon">
                                         <i class="fa fa-building"></i>
                                     </span>
-                                    <span>Register as Recruiter</span>
+                                    <span>As a Recruiter</span>
                                 </a>
                                 <a class="button is-success" href="{% url 'job_seeker_signup' %}">
                                     <span class="icon">
                                         <i class="fa fa-user"></i>
                                     </span>
-                                    <span>Register as Job Seeker</span>
+                                    <span>As a Job Seeker</span>
                                 </a>
                             </div>
                         </div>
