@@ -14,10 +14,6 @@ class UserLoginForm(AuthenticationForm):
 
 class RecruiterSignUpForm(UserCreationForm):
     """Form for recruiter registration"""
-    company_name = forms.CharField(max_length=200, required=True)
-    company_website = forms.URLField(required=False)
-    role = forms.CharField(max_length=100, required=True)
-
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
@@ -33,12 +29,10 @@ class RecruiterSignUpForm(UserCreationForm):
 
         if commit:
             user.save()
-            # Create or update the user's profile
+            # Create a minimal profile - details will be filled in later in settings
             recruiter_profile = RecruiterProfile.objects.create(
                 user=user,
-                company_name=self.cleaned_data['company_name'],
-                company_website=self.cleaned_data['company_website'],
-                role=self.cleaned_data['role']
+                role="" # Empty role that will be filled in settings
             )
 
             # Set user type

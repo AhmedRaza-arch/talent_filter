@@ -46,8 +46,8 @@ def recruiter_signup(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "Registration successful!")
-            return redirect('dashboard')
+            messages.success(request, "Registration successful! Please complete your profile to continue.")
+            return redirect('settings')
         else:
             messages.error(request, "Registration failed. Please check the form.")
     else:

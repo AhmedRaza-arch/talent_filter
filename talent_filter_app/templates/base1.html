@@ -4,12 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Talent Filter{% endblock %}</title>
+    <title>{% block title %}TalentFilter{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <style>
-        /* Custom Theme Colors for Talent Filter */
+        /* Custom Theme Colors for TalentFilter */
 
         /* Purple Theme - Light Mode */
         :root {
@@ -215,6 +218,12 @@
             margin-right: 0.5rem;
         }
 
+        /* Cabin font for app name */
+        .cabin-font {
+            font-family: 'Cabin', sans-serif;
+            font-weight: 600;
+        }
+
         /* Notification styles */
         .navbar-item.has-dropdown .navbar-link {
             display: flex;
@@ -326,7 +335,7 @@
             <!-- Logo/Brand link - always goes to home or appropriate dashboard -->
             <a class="navbar-item" href="{% if user.is_authenticated %}{% if user.usertype.is_job_seeker %}{% url 'job_seeker_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}{% else %}{% url 'login' %}{% endif %}">
                 <img src="{% static 'images/logo.svg' %}" alt="Logo" class="mr-2">
-                <span class="has-text-weight-bold is-size-4">Talent Filter</span>
+                <span class="has-text-weight-bold is-size-4 cabin-font">TalentFilter</span>
             </a>
 
             <!-- Hamburger menu for mobile -->
@@ -480,7 +489,7 @@
     </footer>
 
     <script>
-        // Theme Switcher for Talent Filter
+        // Theme Switcher for TalentFilter
         document.addEventListener('DOMContentLoaded', () => {
             // Check for saved theme preference or use default
             const currentTheme = localStorage.getItem('theme') || 'light';
