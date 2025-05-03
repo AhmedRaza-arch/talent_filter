@@ -1,17 +1,26 @@
 import os
 import json
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.cache import cache
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+# Set up logger
+logger = logging.getLogger(__name__)
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.conf import settings
 from .forms import RecruiterSignUpForm, JobSeekerSignUpForm, UserLoginForm, JobForm, UserProfileForm, JobSeekerProfileForm, CustomPasswordChangeForm, RecruiterProfileForm
 from .models import UserType, Job, Company, Location, Application, Candidate, Notification, JobSeekerProfile, RecruiterProfile
-from .utils import extract_resume_data_from_api, analyze_resume_job_match, read_resume_file
+from .utils import extract_resume_data_from_api, analyze_resume_job_match, read_resume_file, generate_candidate_recommendations
 
 def login_view(request):
     if request.method == 'POST':
@@ -127,8 +136,10 @@ def dashboard(request):
             if app.status in application_status_counts:
                 application_status_counts[app.status] += 1
 
-        # For AI recommendations, we'll just use a placeholder count for now
-        ai_recommendations_count = 15  # This would be replaced with actual AI logic in a real app
+        # Get count of potential AI recommendations (job seekers with skills)
+        ai_recommendations_count = JobSeekerProfile.objects.filter(
+            skills__isnull=False  # Must have skills
+        ).count()
 
     except Exception as e:
         # If there's any error or the recruiter profile doesn't exist
@@ -266,7 +277,112 @@ def candidate_management(request):
 
 @login_required
 def ai_recommendations(request):
-    return render(request, 'ai_recommendations.html')
+    # Check if user is a recruiter
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_recruiter:
+            return redirect('job_seeker_dashboard')
+    except UserType.DoesNotExist:
+        return redirect('dashboard')
+
+    # Get recruiter profile
+    try:
+        recruiter_profile = request.user.recruiterprofile
+
+        # Get all active jobs for this recruiter
+        jobs = Job.objects.filter(
+            recruiter=recruiter_profile,
+            status='Open'
+        ).select_related('company', 'company__location').order_by('-posted_date')
+
+        # Get job seekers with complete profiles
+        job_seekers = JobSeekerProfile.objects.filter(
+            skills__isnull=False,  # Must have skills
+        ).select_related('user')
+
+        # Filter by selected job if provided
+        selected_job_id = request.GET.get('job', '')
+        selected_job = None
+        recommendations = []
+
+        if selected_job_id:
+            try:
+                selected_job = Job.objects.get(id=selected_job_id, recruiter=recruiter_profile)
+
+                # Check if we already have cached recommendations for this job
+                cache_key = f"job_recommendations_{selected_job.id}"
+                cached_recommendations = cache.get(cache_key)
+
+                if cached_recommendations:
+                    # Use cached recommendations
+                    recommendations = cached_recommendations
+
+                    # Get the actual JobSeekerProfile objects for the recommendations
+                    if recommendations:
+                        # Extract candidate IDs from recommendations
+                        candidate_ids = [rec.get('candidate_id') for rec in recommendations if 'candidate_id' in rec]
+
+                        # Get the profiles for these candidates
+                        recommended_profiles = JobSeekerProfile.objects.filter(
+                            id__in=candidate_ids
+                        ).select_related('user')
+
+                        # Create a mapping of profile ID to profile object
+                        profile_map = {str(profile.id): profile for profile in recommended_profiles}
+
+                        # Add the profile object to each recommendation
+                        for rec in recommendations:
+                            if 'candidate_id' in rec and str(rec['candidate_id']) in profile_map:
+                                rec['profile'] = profile_map[str(rec['candidate_id'])]
+                else:
+                    # Generate new AI recommendations for this job
+                    ai_recommendations = generate_candidate_recommendations(selected_job, job_seekers)
+
+                    # Get the actual JobSeekerProfile objects for the recommendations
+                    if ai_recommendations:
+                        # Extract candidate IDs from recommendations
+                        candidate_ids = [rec.get('candidate_id') for rec in ai_recommendations if 'candidate_id' in rec]
+
+                        # Get the profiles for these candidates
+                        recommended_profiles = JobSeekerProfile.objects.filter(
+                            id__in=candidate_ids
+                        ).select_related('user')
+
+                        # Create a mapping of profile ID to profile object
+                        profile_map = {str(profile.id): profile for profile in recommended_profiles}
+
+                        # Process each recommendation
+                        for rec in ai_recommendations:
+                            if 'candidate_id' in rec and str(rec['candidate_id']) in profile_map:
+                                profile = profile_map[str(rec['candidate_id'])]
+                                rec['profile'] = profile
+
+                                # We'll handle caching after processing all recommendations
+
+                        # Save recommendations to cache
+                        cache_key = f"job_recommendations_{selected_job.id}"
+                        cache.set(cache_key, ai_recommendations, 86400)  # Cache for 24 hours
+
+                        recommendations = ai_recommendations
+            except Job.DoesNotExist:
+                messages.error(request, "Selected job not found.")
+
+    except Exception as e:
+        jobs = []
+        job_seekers = []
+        recommendations = []
+        selected_job = None
+        messages.error(request, f"Error loading recommendations: {str(e)}")
+
+    context = {
+        'jobs': jobs,
+        'selected_job': selected_job,
+        'recommendations': recommendations,
+        'total_jobs': len(jobs) if jobs else 0,
+        'total_job_seekers': job_seekers.count() if job_seekers else 0
+    }
+
+    return render(request, 'ai_recommendations.html', context)
 
 @login_required
 def shortlisted_candidates(request):
@@ -491,7 +607,7 @@ def edit_job(request, job_id):
             'country': job.company.location.country,
             'key_responsibilities': '\n'.join(job.get_key_responsibilities()),
             'requirements': '\n'.join(job.get_requirements()),
-            'skills_required': '\n'.join(job.get_skills_required()),
+            'skills_required': ', '.join(job.get_skills_required()),
         }
 
         if job.nice_to_have:
@@ -1086,6 +1202,124 @@ def job_seeker_profile(request):
 
     return render(request, 'job_seeker_profile.html', context)
 
+@login_required
+def view_job_seeker_profile(request, profile_id):
+    """View a job seeker's profile by ID - accessible to recruiters"""
+    # Check if user is a recruiter
+    try:
+        user_type = UserType.objects.get(user=request.user)
+        if not user_type.is_recruiter:
+            return redirect('job_seeker_dashboard')
+    except UserType.DoesNotExist:
+        return redirect('dashboard')
+
+    # Get the job seeker profile
+    try:
+        job_seeker_profile = JobSeekerProfile.objects.get(id=profile_id)
+
+        # Calculate profile completion percentage
+        profile_completion = calculate_profile_completion(job_seeker_profile.user, job_seeker_profile)
+
+        context = {
+            'profile': job_seeker_profile,
+            'profile_user': job_seeker_profile.user,
+            'profile_completion': profile_completion,
+        }
+
+        return render(request, 'view_job_seeker_profile.html', context)
+    except JobSeekerProfile.DoesNotExist:
+        messages.error(request, "Job seeker profile not found.")
+        return redirect('ai_recommendations')
+
+    # Calculate profile completion percentage
+    profile_completion = calculate_profile_completion(request.user, job_seeker_profile)
+
+    # Check if this is a new profile with minimal information
+    is_new_profile = (profile_completion < 25)
+
+    # Print debug information
+    if job_seeker_profile.profile_picture:
+        print(f"Profile picture URL: {job_seeker_profile.profile_picture.url}")
+
+    # Initialize forms
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'user_profile':
+            user_form = UserProfileForm(request.POST, instance=request.user)
+            if user_form.is_valid():
+                user_form.save()
+                messages.success(request, "Personal information updated successfully!")
+                return redirect('job_seeker_profile')
+
+        elif form_type == 'job_seeker_profile':
+            # Check if this is the upload form or the professional info form
+            is_upload_form = 'upload-form' in request.POST.get('form_id', '')
+
+            if is_upload_form:
+                # Handle file uploads directly
+                if 'profile_picture' in request.FILES:
+                    job_seeker_profile.profile_picture = request.FILES['profile_picture']
+                    print(f"Uploaded profile picture: {job_seeker_profile.profile_picture.name}")
+
+                if 'resume' in request.FILES:
+                    job_seeker_profile.resume = request.FILES['resume']
+                    print(f"Uploaded resume: {job_seeker_profile.resume.name}")
+                    # Suggest using AI extraction
+                    messages.info(request, "Resume uploaded! Use the 'Extract Data with AI' button to automatically fill your profile.")
+
+                job_seeker_profile.save()
+                messages.success(request, "Files uploaded successfully!")
+            else:
+                # Handle professional info update (excluding file fields)
+                profile_form = JobSeekerProfileForm(request.POST, instance=job_seeker_profile)
+                if profile_form.is_valid():
+                    profile = profile_form.save(commit=False)
+                    # Don't touch the file fields
+                    profile.save()
+                    messages.success(request, "Professional information updated successfully!")
+
+            return redirect('job_seeker_profile')
+
+        elif form_type == 'password_change':
+            password_form = CustomPasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                messages.success(request, "Password changed successfully!")
+                return redirect('job_seeker_profile')
+
+        # If we get here, there was an error in the form submission
+        # We'll recreate the appropriate form with errors below
+    else:
+        # Initialize all forms with current data
+        user_form = UserProfileForm(instance=request.user)
+        profile_form = JobSeekerProfileForm(instance=job_seeker_profile)
+        password_form = CustomPasswordChangeForm(request.user)
+
+    # If we're handling a POST request with errors, initialize the non-submitted forms
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        if form_type == 'user_profile':
+            profile_form = JobSeekerProfileForm(instance=job_seeker_profile)
+            password_form = CustomPasswordChangeForm(request.user)
+        elif form_type == 'job_seeker_profile':
+            user_form = UserProfileForm(instance=request.user)
+            password_form = CustomPasswordChangeForm(request.user)
+        elif form_type == 'password_change':
+            user_form = UserProfileForm(instance=request.user)
+            profile_form = JobSeekerProfileForm(instance=job_seeker_profile)
+
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'password_form': password_form,
+        'profile_completion': profile_completion,
+        'job_seeker_profile': job_seeker_profile,
+        'is_new_profile': is_new_profile,
+    }
+
+    return render(request, 'job_seeker_profile.html', context)
+
 # Helper function to calculate profile completion
 def calculate_profile_completion(user, profile):
     """Calculate the profile completion percentage"""
@@ -1169,15 +1403,128 @@ def create_notification(recipient, message, notification_type, sender=None, rela
     return notification
 
 @login_required
+@require_POST
+def invite_candidate(request):
+    """Send an invitation to a candidate to apply for a job"""
+    # Parse JSON data from request body
+    try:
+        data = json.loads(request.body)
+        candidate_id = data.get('candidate_id')
+        job_id = data.get('job_id')
+        note = data.get('note', '')
+
+        # Check if user is a recruiter
+        try:
+            user_type = UserType.objects.get(user=request.user)
+            if not user_type.is_recruiter:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Only recruiters can send invitations'
+                })
+        except UserType.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'User type not found'
+            })
+
+        # Get the job
+        try:
+            job = Job.objects.get(id=job_id)
+            # Verify the job belongs to the recruiter
+            if job.recruiter.user != request.user:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'You can only invite candidates to your own jobs'
+                })
+        except Job.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Job not found'
+            })
+
+        # Get the job seeker profile
+        try:
+            job_seeker_profile = JobSeekerProfile.objects.get(id=candidate_id)
+            job_seeker = job_seeker_profile.user
+        except JobSeekerProfile.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Candidate not found'
+            })
+
+        # Create the notification message
+        company_name = job.company.name
+        job_title = job.job_title
+
+        message = f"You've been invited to apply for the {job_title} position at {company_name}."
+        if note:
+            message += f" Recruiter's note: {note}"
+
+        # Create the notification
+        related_link = f"/jobs/{job_id}/apply/"
+        notification = create_notification(
+            recipient=job_seeker,
+            sender=request.user,
+            message=message,
+            notification_type='job',
+            related_link=related_link
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Invitation sent to {job_seeker.get_full_name() or job_seeker.username} successfully!'
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        })
+    except Exception as e:
+        logger.error(f"Error in invite_candidate view: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error sending invitation: {str(e)}'
+        })
+
+from .async_utils import (
+    get_job_match_status,
+    set_job_match_status,
+    process_job_match_analysis_async,
+    JobMatchStatus
+)
+
 def analyze_job_match(request, job_id):
     """Analyze the match between a job seeker's resume and a job description"""
-    # Check if user is a job seeker
-    try:
-        user_type = UserType.objects.get(user=request.user)
-        if not user_type.is_job_seeker:
-            return JsonResponse({'status': 'error', 'message': 'Only job seekers can analyze job matches'})
-    except UserType.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'User type not found'})
+    import logging
+    import time
+
+    logger = logging.getLogger(__name__)
+
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    logger.info(f"[{timestamp}] ===== ANALYZE_JOB_MATCH VIEW CALLED =====")
+    logger.info(f"[{timestamp}] User: {request.user}, Job ID: {job_id}")
+    logger.info(f"[{timestamp}] Request method: {request.method}")
+    logger.info(f"[{timestamp}] Is AJAX: {'X-Requested-With' in request.headers}")
+
+    if 'check_status' in request.GET:
+        logger.info(f"[{timestamp}] Status check requested")
+
+    # For testing purposes, we'll skip the user type check
+    if request.path.startswith('/test-ai-match'):
+        logger.info("Test page detected, skipping user type check")
+    else:
+        # Check if user is logged in
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'error', 'message': 'You must be logged in to analyze job matches'})
+
+        # Check if user is a job seeker
+        try:
+            user_type = UserType.objects.get(user=request.user)
+            if not user_type.is_job_seeker:
+                return JsonResponse({'status': 'error', 'message': 'Only job seekers can analyze job matches'})
+        except UserType.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User type not found'})
 
     # Get the job
     try:
@@ -1185,71 +1532,153 @@ def analyze_job_match(request, job_id):
     except Job.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Job not found'})
 
-    # Get job seeker profile
-    try:
-        job_seeker_profile = JobSeekerProfile.objects.get(user=request.user)
+    # Check if this is a status check request
+    if request.GET.get('check_status') == 'true':
+        # Get the current status from the cache
+        status_data = get_job_match_status(request.user.id, job_id)
 
-        # Check if resume exists
-        if not job_seeker_profile.resume:
+        if not status_data:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Please upload a resume before analyzing job matches'
+                'message': 'No job match analysis in progress'
             })
 
-        # Read the resume file
-        resume_path = os.path.join(settings.MEDIA_ROOT, str(job_seeker_profile.resume))
-        resume_text = read_resume_file(resume_path)
-
-        if resume_text.startswith("Error:"):
+        # Return the current status
+        if status_data['status'] == JobMatchStatus.COMPLETED:
+            return JsonResponse({
+                'status': 'success',
+                'result': status_data['result']
+            })
+        elif status_data['status'] == JobMatchStatus.FAILED:
             return JsonResponse({
                 'status': 'error',
-                'message': f'Error reading resume: {resume_text}'
+                'message': status_data.get('error_message', 'Failed to analyze job match')
+            })
+        else:
+            # Still processing
+            return JsonResponse({
+                'status': 'processing',
+                'message': 'Job match analysis is still in progress'
             })
 
-        # Prepare job description text
-        job_description = f"""Job Title: {job.job_title}
-        Company: {job.company.name}
-        Location: {job.company.location.city}, {job.company.location.state}, {job.company.location.country}
-        Workplace Type: {job.workplace_type}
-        Employment Type: {job.employment_type}
-        Experience Required: {job.experience_required}
+    # For testing purposes, we'll use a sample resume text
+    if request.path.startswith('/test-ai-match'):
+        logger.info("Test page detected, using sample resume text")
+        resume_text = """
+        John Doe
+        Software Engineer
 
-        Summary:
-        {job.summary}
+        Experience:
+        - Senior Software Engineer, Google, 2018-2022
+        - Software Developer, Microsoft, 2015-2018
 
-        Key Responsibilities:
-        {', '.join(job.get_key_responsibilities())}
+        Education:
+        - Bachelor of Science in Computer Science, Stanford University, 2011-2015
 
-        Requirements:
-        {', '.join(job.get_requirements())}
+        Skills:
+        Python, JavaScript, React, Node.js, Django, SQL, AWS, Docker
 
-        Skills Required:
-        {', '.join(job.get_skills_required())}
+        Location:
+        San Francisco, CA
         """
+    else:
+        # Get job seeker profile
+        try:
+            job_seeker_profile = JobSeekerProfile.objects.get(user=request.user)
 
-        # Call the AI service to analyze the match
-        analysis_result = analyze_resume_job_match(resume_text, job_description)
+            # Check if resume exists
+            if not job_seeker_profile.resume:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Please upload a resume before analyzing job matches'
+                })
 
-        if not analysis_result:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Failed to analyze job match. Please try again later.'
-            })
+            # Read the resume file
+            import os
+            from django.conf import settings
+            resume_path = os.path.join(settings.MEDIA_ROOT, str(job_seeker_profile.resume))
+            logger.info(f"[{timestamp}] Resume path: {resume_path}")
+            logger.info(f"[{timestamp}] Resume exists: {os.path.exists(resume_path)}")
 
-        # Return the analysis result
-        return JsonResponse({
-            'status': 'success',
-            'result': analysis_result
-        })
+            # Log resume file details
+            if os.path.exists(resume_path):
+                file_size = os.path.getsize(resume_path)
+                logger.info(f"[{timestamp}] Resume file size: {file_size} bytes")
+                logger.info(f"[{timestamp}] Resume file extension: {os.path.splitext(resume_path)[1]}")
 
-    except JobSeekerProfile.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Profile not found'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Error analyzing job match: {str(e)}'})
+            resume_text = read_resume_file(resume_path)
+            logger.info(f"[{timestamp}] Resume text length: {len(resume_text)} characters")
+            logger.info(f"[{timestamp}] Resume text starts with: {resume_text[:100]}...")
+
+            if resume_text.startswith("Error:"):
+                logger.error(f"[{timestamp}] Error reading resume: {resume_text}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Error reading resume: {resume_text}'
+                })
+        except JobSeekerProfile.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Profile not found'})
+        except Exception as e:
+            logger.error(f"Error in analyze_job_match view: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': f'Error analyzing job match: {str(e)}'})
+
+    # Prepare job description text
+    job_description = f"""Job Title: {job.job_title}
+    Company: {job.company.name}
+    Location: {job.company.location.city}, {job.company.location.state}, {job.company.location.country}
+    Workplace Type: {job.workplace_type}
+    Employment Type: {job.employment_type}
+    Experience Required: {job.experience_required}
+
+    Summary:
+    {job.summary}
+
+    Key Responsibilities:
+    {', '.join(job.get_key_responsibilities())}
+
+    Requirements:
+    {', '.join(job.get_requirements())}
+
+    Skills Required:
+    {', '.join(job.get_skills_required())}
+    """
+
+    # For testing purposes, use a fixed user ID
+    user_id = request.user.id if request.user.is_authenticated else 999
+
+    # Start the asynchronous job match analysis
+    process_job_match_analysis_async(
+        user_id,
+        job_id,
+        resume_text,
+        job_description,
+        analyze_resume_job_match
+    )
+
+    # Return immediately with a processing status
+    return JsonResponse({
+        'status': 'processing',
+        'message': 'Job match analysis has started. Please wait while we analyze your resume against this job.'
+    })
+
+from .extraction_status import (
+    get_extraction_status,
+    ExtractionStatus
+)
+
+def test_ai_match(request):
+    """Test view for AI match functionality"""
+    return render(request, 'test_ai_match.html')
 
 @login_required
 def extract_resume_data(request):
     """Extract data from resume using AI"""
+    import time
+    import logging
+    import threading
+
+    logger = logging.getLogger(__name__)
+
     # Check if user is a job seeker
     try:
         user_type = UserType.objects.get(user=request.user)
@@ -1261,10 +1690,8 @@ def extract_resume_data(request):
     # For AJAX requests to check status
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == 'GET':
         # Return the current extraction status
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Extraction in progress...'
-        })
+        status_data = get_extraction_status(request.user.id)
+        return JsonResponse(status_data)
 
     # Get job seeker profile
     try:
@@ -1275,43 +1702,55 @@ def extract_resume_data(request):
             messages.error(request, "Please upload a resume before using the AI extraction feature.")
             return redirect('job_seeker_profile')
 
-        # Call the API to extract data from the resume
-        resume_path = str(job_seeker_profile.resume)
-        extracted_data = extract_resume_data_from_api(resume_path)
+        # Define a function to run the extraction process in a background thread
+        def run_extraction_process():
+            try:
+                # Call the extraction function with user_id for status tracking
+                resume_path = str(job_seeker_profile.resume)
+                extracted_data = extract_resume_data_from_api(resume_path, user_id=request.user.id)
 
-        if not extracted_data:
-            messages.error(request, "Failed to extract data from your resume. Please try again later.")
-            return redirect('job_seeker_profile')
+                if not extracted_data:
+                    logger.error("Resume data extraction failed")
+                    return
 
-        # Update the profile with extracted data
-        if 'skills' in extracted_data and extracted_data['skills']:
-            job_seeker_profile.skills = extracted_data['skills']
+                # Update the profile with extracted data
+                if 'skills' in extracted_data and extracted_data['skills']:
+                    job_seeker_profile.skills = extracted_data['skills']
 
-        if 'education' in extracted_data and extracted_data['education']:
-            job_seeker_profile.education = extracted_data['education']
+                if 'education' in extracted_data and extracted_data['education']:
+                    job_seeker_profile.education = extracted_data['education']
 
-        if 'experience_years' in extracted_data and extracted_data['experience_years']:
-            job_seeker_profile.experience_years = extracted_data['experience_years']
+                if 'experience_years' in extracted_data and extracted_data['experience_years']:
+                    job_seeker_profile.experience_years = extracted_data['experience_years']
 
-        if 'location' in extracted_data and extracted_data['location']:
-            job_seeker_profile.location = extracted_data['location']
+                if 'location' in extracted_data and extracted_data['location']:
+                    job_seeker_profile.location = extracted_data['location']
 
-        job_seeker_profile.save()
+                job_seeker_profile.save()
 
-        # Count how many fields were successfully extracted
-        successful_fields = sum(1 for field in ['skills', 'education', 'experience_years', 'location']
-                               if field in extracted_data and extracted_data[field])
+            except Exception as e:
+                logger.error(f"Error in extraction thread: {str(e)}")
 
-        if successful_fields == 4:
-            messages.success(request, "Successfully extracted all information from your resume!")
-        elif successful_fields > 0:
-            messages.success(request, f"Successfully extracted {successful_fields} out of 4 information fields from your resume.")
-        else:
-            messages.warning(request, "We couldn't extract meaningful information from your resume. Please update your profile manually.")
+        # Start the extraction process in a background thread
+        extraction_thread = threading.Thread(target=run_extraction_process)
+        extraction_thread.daemon = True
+        extraction_thread.start()
+
+        # If this is an AJAX request, return a processing status
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'processing',
+                'message': 'Resume extraction has started. Please wait...'
+            })
+
+        # For non-AJAX requests, redirect to the profile page with a message
+        messages.info(request, "Resume extraction has started. This may take a minute...")
+        return redirect('job_seeker_profile')
 
     except JobSeekerProfile.DoesNotExist:
         messages.error(request, "Profile not found.")
+        return redirect('job_seeker_profile')
     except Exception as e:
+        logger.error(f"Error in extract_resume_data view: {str(e)}")
         messages.error(request, f"Error extracting data: {str(e)}")
-
-    return redirect('job_seeker_profile')
+        return redirect('job_seeker_profile')

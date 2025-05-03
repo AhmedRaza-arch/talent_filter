@@ -1,5 +1,607 @@
 {% extends "base1.html" %}
+
+{% block extra_css %}
+<style>
+    /* Steps component styling */
+    .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .step-marker {
+        background-color: var(--primary);
+        color: white;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .step-details {
+        flex-grow: 1;
+    }
+
+    .step-title {
+        font-weight: bold;
+        margin-bottom: 0.25rem !important;
+    }
+
+    /* Make sure the welcome box doesn't collapse */
+    .box:not(.recommendation-box) {
+        min-height: 400px;
+    }
+
+    /* Ensure consistent spacing */
+    .notification p:not(:last-child) {
+        margin-bottom: 0.75rem;
+    }
+
+    /* Stats box styling */
+    .has-background-primary-light {
+        background-color: rgba(106, 76, 147, 0.1) !important;
+    }
+
+    /* Make sure level items are properly spaced */
+    .level-item {
+        padding: 0.5rem;
+    }
+
+    /* Ensure the title in the stats is properly sized */
+    .level-item .title {
+        font-size: 1.75rem !important;
+        color: var(--primary);
+    }
+
+    /* Fix for the absurdly large recommendation boxes */
+    .recommendation-box {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    /* Make the AI Assessment and Contact Recommendation boxes more compact */
+    .recommendation-box .media {
+        align-items: flex-start;
+    }
+
+    .recommendation-box .media-content {
+        overflow-y: visible;
+    }
+
+    .recommendation-box .title.is-6 {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .recommendation-box p.is-size-7 {
+        margin-bottom: 0 !important;
+        line-height: 1.4;
+    }
+
+    /* Ensure the recommendation cards have consistent height */
+    .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-content {
+        flex-grow: 1;
+        padding: 1rem;
+    }
+
+    /* Make the content more compact */
+    .card-content .content {
+        font-size: 0.9rem;
+    }
+
+    /* Adjust spacing for skills sections */
+    .card-content .content p {
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Make tags more compact */
+    .tags {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .tag {
+        margin-bottom: 0.25rem !important;
+    }
+
+    /* Ensure the columns inside cards are properly aligned */
+    .card-content .columns {
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Make the profile section more compact */
+    .card-content .column.is-3 {
+        padding: 0.5rem;
+    }
+
+    /* Ensure the profile picture is properly sized */
+    .image.is-64x64 {
+        margin: 0 auto 0.5rem auto;
+    }
+
+    /* Sidebar styling */
+    .sidebar-card {
+        height: auto;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .compact-card-content {
+        padding-bottom: 0.5rem;
+    }
+
+    .card-content.pt-0 {
+        padding-top: 0;
+    }
+
+    /* Job list styling */
+    .job-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .job-list li a {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 0.25rem;
+    }
+
+    .job-list li a.is-active {
+        background-color: var(--primary);
+        color: white;
+    }
+
+    .job-list li a.is-active .company-tag {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+
+    .job-title {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 0.5rem;
+    }
+
+    .company-tag {
+        flex-shrink: 0;
+        font-size: 0.7rem !important;
+    }
+
+    .empty-jobs {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        color: #777;
+    }
+
+    /* Menu label styling */
+    .menu-label {
+        color: var(--primary);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Tags styling for sidebar */
+    .tags.has-addons {
+        justify-content: flex-start;
+        margin-bottom: 0.5rem;
+    }
+
+    .tags.has-addons .tag {
+        margin-bottom: 0 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1 class="title">AI Recommendations</h1>
-<!-- Add AI recommendations content here -->
+<div class="container">
+    <h1 class="title">AI Candidate Recommendations</h1>
+    <p class="subtitle">Find the best candidates for your open positions using AI-powered matching</p>
+    {% csrf_token %}
+
+    <div class="columns">
+        <!-- Left sidebar with job selection -->
+        <div class="column is-3">
+            <div class="card sidebar-card">
+                <header class="card-header">
+                    <p class="card-header-title">
+                        Select a Job
+                    </p>
+                </header>
+                <div class="card-content compact-card-content">
+                    <div class="content">
+                        <p class="mb-2">Select one of your open jobs to get AI-powered candidate recommendations.</p>
+                        <div class="tags has-addons mb-1">
+                            <span class="tag is-dark">Total Open Jobs</span>
+                            <span class="tag is-info">{{ total_jobs }}</span>
+                        </div>
+                        <div class="tags has-addons">
+                            <span class="tag is-dark">Available Candidates</span>
+                            <span class="tag is-success">{{ total_job_seekers }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content pt-0">
+                    <aside class="menu">
+                        <p class="menu-label">Your Open Jobs</p>
+                        <ul class="menu-list job-list">
+                            {% for job in jobs %}
+                            <li>
+                                <a href="{% url 'ai_recommendations' %}?job={{ job.id }}"
+                                   class="{% if selected_job.id == job.id %}is-active{% endif %}">
+                                    <span class="job-title">{{ job.job_title }}</span>
+                                    <span class="tag is-info is-light company-tag">{{ job.company.name }}</span>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li class="empty-jobs">No open jobs found. <a href="{% url 'add_job' %}">Add a job</a> to get recommendations.</li>
+                            {% endfor %}
+                        </ul>
+                    </aside>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content area with recommendations -->
+        <div class="column is-9">
+            {% if selected_job %}
+            <div class="box">
+                <h2 class="title is-4">Recommendations for: {{ selected_job.job_title }}</h2>
+                <p class="subtitle is-6">{{ selected_job.company.name }} - {{ selected_job.company.location.city }}, {{ selected_job.company.location.state }}</p>
+
+                <div class="tags">
+                    <span class="tag is-info">{{ selected_job.workplace_type }}</span>
+                    <span class="tag is-success">{{ selected_job.employment_type }}</span>
+                    <span class="tag is-warning">{{ selected_job.experience_required }} Experience</span>
+                </div>
+
+                <div class="content">
+                    <p><strong>Required Skills:</strong> {{ selected_job.get_skills_required|join:", " }}</p>
+                </div>
+            </div>
+
+            {% if recommendations %}
+            <div class="columns is-multiline">
+                {% for recommendation in recommendations %}
+                <div class="column is-6">
+                    <div class="card">
+                        <header class="card-header has-background-primary">
+                            <p class="card-header-title has-text-white">
+                                {% if recommendation.profile.user.get_full_name %}
+                                {{ recommendation.profile.user.get_full_name }}
+                                {% else %}
+                                {{ recommendation.profile.user.username }}
+                                {% endif %}
+                            </p>
+                            <div class="card-header-icon">
+                                <span class="tag is-warning is-medium">{{ recommendation.match_score }}% Match</span>
+                            </div>
+                        </header>
+                        <div class="card-content">
+                            <div class="content">
+                                <div class="columns is-mobile">
+                                    <div class="column is-3 has-text-centered">
+                                        {% if recommendation.profile.profile_picture %}
+                                        <figure class="image is-48x48 mx-auto">
+                                            <img src="{{ recommendation.profile.profile_picture.url }}" alt="Profile picture" class="is-rounded">
+                                        </figure>
+                                        {% else %}
+                                        <figure class="image is-48x48 mx-auto">
+                                            <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image" class="is-rounded">
+                                        </figure>
+                                        {% endif %}
+                                        <p class="is-size-7 mb-1"><strong>Experience:</strong> {{ recommendation.profile.experience_years }} years</p>
+                                        <p class="is-size-7"><strong>Location:</strong> {{ recommendation.profile.location|default:"Not specified" }}</p>
+                                    </div>
+                                    <div class="column">
+                                        <p class="mb-2"><strong>Skills:</strong> <span class="is-size-7">{{ recommendation.profile.skills }}</span></p>
+
+                                        <p class="mb-1"><strong>Matching Skills:</strong></p>
+                                        <div class="tags are-small">
+                                            {% for skill in recommendation.matching_skills %}
+                                            <span class="tag is-success">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        <p class="mb-1"><strong>Missing Skills:</strong></p>
+                                        <div class="tags are-small">
+                                            {% for skill in recommendation.missing_skills %}
+                                            <span class="tag is-danger is-light">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="box has-background-info-light recommendation-box">
+                                        <div class="media">
+                                            <div class="media-left">
+                                                <span class="icon has-text-info">
+                                                    <i class="fa fa-robot"></i>
+                                                </span>
+                                            </div>
+                                            <div class="media-content">
+                                                <p class="title is-6">AI Assessment</p>
+                                                <p class="is-size-7">{{ recommendation.overall_assessment }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="box has-background-warning-light recommendation-box">
+                                        <div class="media">
+                                            <div class="media-left">
+                                                <span class="icon has-text-warning">
+                                                    <i class="fa fa-lightbulb-o"></i>
+                                                </span>
+                                            </div>
+                                            <div class="media-content">
+                                                <p class="title is-6">Contact Recommendation</p>
+                                                <p class="is-size-7">{{ recommendation.contact_recommendation }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <footer class="card-footer">
+                            <a href="#" class="card-footer-item invite-button" data-candidate-id="{{ recommendation.profile.id }}" data-candidate-name="{% if recommendation.profile.user.get_full_name %}{{ recommendation.profile.user.get_full_name }}{% else %}{{ recommendation.profile.user.username }}{% endif %}" data-job-id="{{ selected_job.id }}" data-job-title="{{ selected_job.job_title }}">
+                                <span class="icon"><i class="fa fa-paper-plane"></i></span>
+                                <span>Invite to Apply</span>
+                            </a>
+                            <a href="{% url 'view_job_seeker_profile' recommendation.profile.id %}" class="card-footer-item">
+                                <span class="icon"><i class="fa fa-user"></i></span>
+                                <span>View Profile</span>
+                            </a>
+                        </footer>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="notification is-warning">
+                {% if selected_job %}
+                <p>No recommendations available for this job. This could be because:</p>
+                <ul>
+                    <li>There are no job seekers with matching skills in the system</li>
+                    <li>The AI recommendation system is still processing</li>
+                    <li>There was an error generating recommendations</li>
+                </ul>
+                <p>Try selecting a different job or check back later.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="box">
+                <div class="content">
+                    <h2 class="title is-4">AI Candidate Matching</h2>
+                    <p class="subtitle is-6">Find the perfect candidates for your open positions</p>
+
+                    <div class="columns">
+                        <div class="column is-8">
+                            <div class="notification is-info is-light">
+                                <p class="has-text-weight-bold">Select a job to get AI-powered candidate recommendations</p>
+                                <p>Choose one of your open jobs from the sidebar to see AI-matched candidates who might be a good fit for the position.</p>
+                            </div>
+
+                            <div class="mt-4">
+                                <h3 class="title is-5">How it works</h3>
+                                <div class="steps">
+                                    <div class="step-item">
+                                        <div class="step-marker">1</div>
+                                        <div class="step-details">
+                                            <p class="step-title">Select a Job</p>
+                                            <p>Choose one of your open positions from the sidebar</p>
+                                        </div>
+                                    </div>
+                                    <div class="step-item">
+                                        <div class="step-marker">2</div>
+                                        <div class="step-details">
+                                            <p class="step-title">AI Analysis</p>
+                                            <p>Our AI analyzes candidate profiles against your job requirements</p>
+                                        </div>
+                                    </div>
+                                    <div class="step-item">
+                                        <div class="step-marker">3</div>
+                                        <div class="step-details">
+                                            <p class="step-title">Review Matches</p>
+                                            <p>Review AI-recommended candidates with detailed match analysis</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column is-4">
+                            <div class="box has-background-primary-light">
+                                <h3 class="title is-5">AI Matching Stats</h3>
+                                <div class="level">
+                                    <div class="level-item has-text-centered">
+                                        <div>
+                                            <p class="heading">Open Jobs</p>
+                                            <p class="title">{{ total_jobs }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="level-item has-text-centered">
+                                        <div>
+                                            <p class="heading">Candidates</p>
+                                            <p class="title">{{ total_job_seekers }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if not jobs %}
+                                <div class="buttons is-centered mt-4">
+                                    <a href="{% url 'add_job' %}" class="button is-primary">
+                                        <span class="icon"><i class="fas fa-plus"></i></span>
+                                        <span>Add a New Job</span>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <p class="has-text-centered mt-4">Select a job from the sidebar to begin</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all invite buttons
+        const inviteButtons = document.querySelectorAll('.invite-button');
+
+        // Add click event listener to each button
+        inviteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Get candidate and job information from data attributes
+                const candidateId = this.getAttribute('data-candidate-id');
+                const candidateName = this.getAttribute('data-candidate-name');
+                const jobId = this.getAttribute('data-job-id');
+                const jobTitle = this.getAttribute('data-job-title');
+
+                // Create modal content
+                const modalHtml = `
+                    <div class="modal is-active" id="invite-modal-${candidateId}">
+                        <div class="modal-background"></div>
+                        <div class="modal-card">
+                            <header class="modal-card-head">
+                                <p class="modal-card-title">Invite ${candidateName} to Apply</p>
+                                <button class="delete close-modal" aria-label="close"></button>
+                            </header>
+                            <section class="modal-card-body">
+                                <div class="content">
+                                    <p>You're about to invite <strong>${candidateName}</strong> to apply for the position:</p>
+                                    <p class="has-text-weight-bold is-size-5">${jobTitle}</p>
+
+                                    <div class="notification is-info is-light mt-4">
+                                        <p>This will send a notification to the candidate encouraging them to apply for this position. The candidate will see your company name and job details.</p>
+                                    </div>
+
+                                    <div class="field mt-4">
+                                        <label class="label">Add a personal note (optional)</label>
+                                        <div class="control">
+                                            <textarea class="textarea" placeholder="We think you'd be a great fit for this position because..." id="invite-note-${candidateId}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            <footer class="modal-card-foot">
+                                <button class="button is-primary send-invite" data-candidate-id="${candidateId}" data-job-id="${jobId}">
+                                    <span class="icon"><i class="fas fa-paper-plane"></i></span>
+                                    <span>Send Invitation</span>
+                                </button>
+                                <button class="button close-modal">Cancel</button>
+                            </footer>
+                        </div>
+                    </div>
+                `;
+
+                // Add modal to the page
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                // Add event listeners to close buttons
+                document.querySelectorAll('.close-modal').forEach(closeBtn => {
+                    closeBtn.addEventListener('click', function() {
+                        document.querySelector(`#invite-modal-${candidateId}`).remove();
+                    });
+                });
+
+                // Close modal when clicking on background
+                document.querySelector(`#invite-modal-${candidateId} .modal-background`).addEventListener('click', function() {
+                    document.querySelector(`#invite-modal-${candidateId}`).remove();
+                });
+
+                // Add event listener to send invitation button
+                document.querySelector(`#invite-modal-${candidateId} .send-invite`).addEventListener('click', function() {
+                    const note = document.querySelector(`#invite-note-${candidateId}`).value;
+
+                    // Show loading state
+                    this.classList.add('is-loading');
+                    this.disabled = true;
+
+                    // Send AJAX request to invite candidate
+                    fetch('/invite-candidate/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            candidate_id: candidateId,
+                            job_id: jobId,
+                            note: note
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Remove the modal
+                        document.querySelector(`#invite-modal-${candidateId}`).remove();
+
+                        // Show success notification
+                        const notification = `
+                            <div class="notification is-${data.status === 'success' ? 'success' : 'danger'}" id="invite-result-${candidateId}">
+                                <button class="delete"></button>
+                                <p>${data.message}</p>
+                            </div>
+                        `;
+
+                        // Add notification to the page
+                        document.querySelector('.container').insertAdjacentHTML('afterbegin', notification);
+
+                        // Add event listener to close notification
+                        document.querySelector(`#invite-result-${candidateId} .delete`).addEventListener('click', function() {
+                            document.querySelector(`#invite-result-${candidateId}`).remove();
+                        });
+
+                        // Auto-hide notification after 5 seconds
+                        setTimeout(() => {
+                            const notificationElement = document.querySelector(`#invite-result-${candidateId}`);
+                            if (notificationElement) {
+                                notificationElement.remove();
+                            }
+                        }, 5000);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.classList.remove('is-loading');
+                        this.disabled = false;
+                        alert('An error occurred while sending the invitation. Please try again.');
+                    });
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}

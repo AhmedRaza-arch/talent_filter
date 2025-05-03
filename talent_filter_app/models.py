@@ -70,7 +70,7 @@ class Job(models.Model):
     skills_required = models.TextField()
 
     # Recruiter information
-    recruiter = models.ForeignKey('RecruiterProfile', on_delete=models.CASCADE, related_name='jobs')
+    recruiter = models.ForeignKey('RecruiterProfile', on_delete=models.CASCADE, related_name='jobs', null=True, blank=True)
     recruiter_name = models.CharField(max_length=100)
     recruiter_position = models.CharField(max_length=100)
     recruiter_email = models.EmailField(blank=True, null=True)
@@ -211,6 +211,72 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} notification for {self.recipient.username}"
+
+class JobMatchAnalysis(models.Model):
+    """Model to track job match analysis requests and their status"""
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    result = models.JSONField(null=True, blank=True)
+    error_message = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+        ordering = ['-updated_at']
+
+class CandidateRecommendation(models.Model):
+    """Model to store AI-generated candidate recommendations for jobs"""
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='recommendations')
+    job_seeker = models.ForeignKey(JobSeekerProfile, on_delete=models.CASCADE, related_name='job_recommendations')
+    match_score = models.IntegerField(default=0)
+    matching_skills = models.JSONField(default=list)
+    missing_skills = models.JSONField(default=list)
+    experience_match = models.TextField(blank=True, null=True)
+    education_match = models.TextField(blank=True, null=True)
+    overall_assessment = models.TextField(blank=True, null=True)
+    contact_recommendation = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('job', 'job_seeker')
+        ordering = ['-match_score', '-updated_at']
+
+    def __str__(self):
+        return f"Recommendation for {self.job_seeker.user.username} - {self.job.job_title} ({self.match_score}%)"
+
+class JobMatchAnalysis(models.Model):
+    """Model to track job match analysis requests and their status"""
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    result = models.JSONField(null=True, blank=True)
+    error_message = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"Job Match Analysis: {self.user.username} - {self.job.job_title}"
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from .models import RecruiterProfile, JobSeekerProfile, Job, Company, Location
+from .widgets import TagInputWidget
 import json
 
 class UserLoginForm(AuthenticationForm):
@@ -153,8 +154,8 @@ class JobForm(forms.ModelForm):
                                 help_text="Enter each requirement on a new line")
     nice_to_have = forms.CharField(widget=forms.Textarea, required=False,
                                 help_text="Enter each nice-to-have on a new line")
-    skills_required = forms.CharField(widget=forms.Textarea, required=True,
-                                    help_text="Enter each skill on a new line")
+    skills_required = forms.CharField(widget=forms.TextInput(attrs={'id': 'id_skills_required', 'class': 'input'}), required=True,
+                                    help_text="Type skills and press Enter to add them as tags")
     external_portals = forms.CharField(widget=forms.Textarea, required=False,
                                      help_text="Enter each portal on a new line")
 
@@ -200,11 +201,24 @@ class JobForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         # Convert textarea inputs to lists for JSON fields
-        for field_name in ['key_responsibilities', 'requirements', 'nice_to_have', 'skills_required', 'external_portals']:
+        for field_name in ['key_responsibilities', 'requirements', 'nice_to_have', 'external_portals']:
             if field_name in cleaned_data and cleaned_data[field_name]:
                 # Split by newline and remove empty lines
                 items = [item.strip() for item in cleaned_data[field_name].split('\n') if item.strip()]
                 cleaned_data[field_name] = items
+
+        # Handle skills_required separately as it uses Tagify
+        if 'skills_required' in cleaned_data and cleaned_data['skills_required']:
+            try:
+                # Try to parse as JSON (Tagify format)
+                import json
+                skills_json = json.loads(cleaned_data['skills_required'])
+                skills = [item.get('value', '').strip() for item in skills_json if item.get('value', '').strip()]
+                cleaned_data['skills_required'] = skills
+            except json.JSONDecodeError:
+                # Fallback to comma-separated format
+                skills = [skill.strip() for skill in cleaned_data['skills_required'].split(',') if skill.strip()]
+                cleaned_data['skills_required'] = skills
 
         return cleaned_data
 

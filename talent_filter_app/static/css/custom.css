@@ -1,18 +1,35 @@
 /* Custom styles for Talent Filter */
 
 /* Layout */
-html, body {
+html {
     height: 100%;
+    min-height: 100%;
 }
 
 body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background-attachment: fixed;
+    background-size: cover;
 }
 
 .section {
     flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+/* Fix for background color in scrollable area */
+html::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: var(--background);
 }
 
 .footer {
@@ -54,12 +71,43 @@ body {
     font-size: 1.2rem;
 }
 
+/* AI Recommendation styling */
+.recommendation-box {
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.recommendation-box:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.recommendation-box .media-content p {
+    margin-bottom: 0.5rem;
+}
+
+.recommendation-box .media-left {
+    margin-right: 1rem;
+}
+
+.recommendation-box .title {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Profile image centering */
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
     .buttons {
         justify-content: center;
     }
-    
+
     .button {
         margin-bottom: 0.5rem;
     }

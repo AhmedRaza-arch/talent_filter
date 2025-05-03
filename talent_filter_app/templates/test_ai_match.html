@@ -1,0 +1,126 @@
+{% extends "base1.html" %}
+{% block title %}Test AI Match{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Test AI Match</h1>
+    
+    <div class="box">
+        <h2 class="subtitle">Click the button to test the AI match functionality</h2>
+        <button id="test-ai-match-btn" class="button is-primary" data-job-id="1">
+            Test AI Match
+        </button>
+    </div>
+    
+    <div id="result-box" class="box" style="display: none;">
+        <h2 class="subtitle">Result</h2>
+        <pre id="result-content"></pre>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const testBtn = document.getElementById('test-ai-match-btn');
+        const resultBox = document.getElementById('result-box');
+        const resultContent = document.getElementById('result-content');
+        
+        testBtn.addEventListener('click', function() {
+            const jobId = this.dataset.jobId;
+            console.log('Testing AI match for job ID:', jobId);
+            
+            // Show the result box
+            resultBox.style.display = 'block';
+            resultContent.textContent = 'Making API call...';
+            
+            // Make the API call
+            fetch(`{% url 'analyze_job_match' 1 %}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('API response:', data);
+                resultContent.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.status === 'processing') {
+                    // Start polling for results
+                    pollJobMatchStatus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultContent.textContent = 'Error: ' + error.message;
+            });
+        });
+        
+        function pollJobMatchStatus() {
+            let pollCount = 0;
+            const maxPolls = 120; // Maximum number of polling attempts (120 * 1 second = 2 minutes)
+            
+            resultContent.textContent += '\n\nPolling for results...';
+            
+            const pollInterval = setInterval(() => {
+                pollCount++;
+                
+                // Check if we've reached the maximum number of polls
+                if (pollCount > maxPolls) {
+                    clearInterval(pollInterval);
+                    resultContent.textContent += '\n\nThe analysis is taking longer than expected. Please try again later.';
+                    return;
+                }
+                
+                resultContent.textContent += '\nPoll attempt ' + pollCount;
+                
+                // Make API call to check status
+                fetch(`{% url 'analyze_job_match' 1 %}?check_status=true`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => {
+                    console.log('Poll response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Poll API response:', data);
+                    resultContent.textContent += '\nPoll result: ' + JSON.stringify(data, null, 2);
+                    
+                    if (data.status === 'success' || data.status === 'error') {
+                        // Analysis completed or failed
+                        clearInterval(pollInterval);
+                    }
+                    // If status is 'processing', continue polling
+                })
+                .catch(error => {
+                    console.error('Error polling for status:', error);
+                    resultContent.textContent += '\nError polling: ' + error.message;
+                });
+            }, 1000); // Poll every second
+        }
+        
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

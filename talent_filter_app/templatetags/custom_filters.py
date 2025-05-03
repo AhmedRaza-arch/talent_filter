@@ -15,3 +15,10 @@ def get_item(dictionary, key):
     if dictionary is None:
         return None
     return dictionary.get(key)
+
+@register.filter
+def split(value, delimiter):
+    """Split a string by a delimiter"""
+    if value is None or value == '':
+        return []
+    return value.split(delimiter)

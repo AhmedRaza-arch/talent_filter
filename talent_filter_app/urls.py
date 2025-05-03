@@ -23,6 +23,7 @@ urlpatterns = [
     path('available-jobs/', views.available_jobs, name='available_jobs'),
     path('my-applications/', views.my_applications, name='my_applications'),
     path('job-seeker-profile/', views.job_seeker_profile, name='job_seeker_profile'),
+    path('job-seeker-profile/<int:profile_id>/view/', views.view_job_seeker_profile, name='view_job_seeker_profile'),
     path('job-seeker-profile/extract-resume/', views.extract_resume_data, name='extract_resume_data'),
     path('jobs/<int:job_id>/apply/', views.apply_to_job, name='apply_to_job'),
     path('applications/<int:application_id>/withdraw/', views.withdraw_application, name='withdraw_application'),
@@ -32,4 +33,10 @@ urlpatterns = [
     path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
     path('notifications/mark-all-read/', views.mark_all_read, name='mark_all_read'),
     path('notifications/<int:notification_id>/delete/', views.delete_notification, name='delete_notification'),
+
+    # Invitation URL
+    path('invite-candidate/', views.invite_candidate, name='invite_candidate'),
+
+    # Test URL
+    path('test-ai-match/', views.test_ai_match, name='test_ai_match'),
 ]

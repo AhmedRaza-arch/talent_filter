@@ -1,0 +1,7 @@
+{% load bulma_tags %}
+<div class="tag-input-container">
+    <input type="{{ widget.type }}" name="{{ widget.name }}" {% if widget.value != None %}value="{{ widget.value }}"{% endif %}
+        {% include "django/forms/widgets/attrs.html" %}>
+    <div class="tags-container mt-2"></div>
+    <input type="hidden" name="{{ widget.name }}" id="{{ widget.attrs.id }}_hidden" value="{{ widget.value|default:'' }}">
+</div>

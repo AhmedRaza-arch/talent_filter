@@ -156,15 +156,8 @@
             font-weight: 600;
         }
 
-        /* Layout */
-        html, body {
-            height: 100%;
-        }
-
+        /* Layout - moved to custom.css */
         body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
             background-color: var(--background);
             color: var(--text);
         }
@@ -201,11 +194,6 @@
         /* Logo styling */
         .navbar-item img {
             max-height: 40px;
-            transition: transform 0.3s ease;
-        }
-
-        .navbar-item:hover img {
-            transform: rotate(90deg);
         }
 
         .navbar-brand .navbar-item {
@@ -360,7 +348,7 @@
                         <a class="navbar-item" href="{% url 'candidate_management' %}">Candidate Management</a>
                         <a class="navbar-item" href="{% url 'ai_recommendations' %}">AI Recommendations</a>
                         <a class="navbar-item" href="{% url 'shortlisted_candidates' %}">Shortlisted Candidates</a>
-                        <a class="navbar-item" href="{% url 'reports_analytics' %}">Reports & Analytics</a>
+                        <!-- <a class="navbar-item" href="{% url 'reports_analytics' %}">Reports & Analytics</a> -->
                     {% endif %}
                 {% endif %}
             </div>
@@ -484,7 +472,7 @@
     <!-- Footer -->
     <footer class="footer" style="padding:2rem 1.5rem 0.5rem">
         <div class="content has-text-centered">
-            <p>TalentFilter made with ❤️ by AhmedRaza</p>
+            <p>TalentFilter</p>
         </div>
     </footer>
 

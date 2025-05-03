@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-p@+k=9s%1n5d5^sbk@bgeis9b(1!_7zs!q!d@z6@8qqkl9#f=h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -138,6 +138,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Google Gemini API settings
+GEMINI_API_KEY = 'AIzaSyDKogPQUMzEQnvTqrJEXg2JzTb9urLn11M'  # Replace with your actual API key
+GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+
+# Cache settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'talent-filter-cache',
+        'TIMEOUT': 86400,  # 24 hours in seconds
+    }
+}
+
 # Message tags
 from django.contrib.messages import constants as messages
 MESSAGE_TAGS = {
@@ -146,4 +159,30 @@ MESSAGE_TAGS = {
     messages.SUCCESS: 'success',
     messages.WARNING: 'warning',
     messages.ERROR: 'error',
+}
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'talent_filter_app': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }

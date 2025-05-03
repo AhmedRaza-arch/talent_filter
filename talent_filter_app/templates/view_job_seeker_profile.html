@@ -1,0 +1,129 @@
+{% extends "base1.html" %}
+{% load custom_filters %}
+{% block title %}Candidate Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="columns">
+        <div class="column is-3">
+            <div class="card">
+                <div class="card-image">
+                    <figure class="image is-1by1">
+                        {% if profile.profile_picture %}
+                            <img src="{{ profile.profile_picture.url }}" alt="Profile picture">
+                        {% else %}
+                            <img src="https://bulma.io/images/placeholders/256x256.png" alt="Profile picture">
+                        {% endif %}
+                    </figure>
+                </div>
+                <div class="card-content">
+                    <div class="media">
+                        <div class="media-content">
+                            <p class="title is-4">{{ profile_user.get_full_name|default:profile_user.username }}</p>
+                            <p class="subtitle is-6">{{ profile_user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="content">
+                        <p><strong>Profile Completion:</strong> {{ profile_completion }}%</p>
+                        <progress class="progress is-primary" value="{{ profile_completion }}" max="100">{{ profile_completion }}%</progress>
+                    </div>
+                </div>
+            </div>
+
+            {% if profile.resume %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <p class="card-header-title">Resume</p>
+                </div>
+                <div class="card-content">
+                    <a href="{{ profile.resume.url }}" class="button is-info is-fullwidth" target="_blank">
+                        <span class="icon">
+                            <i class="fa fa-file-pdf"></i>
+                        </span>
+                        <span>View Resume</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <p class="card-header-title">Contact Candidate</p>
+                </div>
+                <div class="card-content">
+                    <a href="mailto:{{ profile_user.email }}" class="button is-primary is-fullwidth">
+                        <span class="icon">
+                            <i class="fa fa-envelope"></i>
+                        </span>
+                        <span>Send Email</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="column is-9">
+            <div class="card">
+                <div class="card-header">
+                    <p class="card-header-title">Professional Information</p>
+                </div>
+                <div class="card-content">
+                    <div class="content">
+                        <div class="columns">
+                            <div class="column is-3">
+                                <p class="has-text-weight-bold">Experience:</p>
+                            </div>
+                            <div class="column">
+                                <p>{{ profile.experience_years }} years</p>
+                            </div>
+                        </div>
+                        
+                        <div class="columns">
+                            <div class="column is-3">
+                                <p class="has-text-weight-bold">Location:</p>
+                            </div>
+                            <div class="column">
+                                <p>{{ profile.location|default:"Not specified" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="columns">
+                            <div class="column is-3">
+                                <p class="has-text-weight-bold">Skills:</p>
+                            </div>
+                            <div class="column">
+                                {% if profile.skills %}
+                                <div class="tags">
+                                    {% for skill in profile.skills|split:", " %}
+                                    <span class="tag is-primary">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p>No skills specified</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="columns">
+                            <div class="column is-3">
+                                <p class="has-text-weight-bold">Education:</p>
+                            </div>
+                            <div class="column">
+                                <p>{{ profile.education|default:"Not specified" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="buttons mt-4">
+                <a href="{% url 'ai_recommendations' %}" class="button is-info">
+                    <span class="icon">
+                        <i class="fa fa-arrow-left"></i>
+                    </span>
+                    <span>Back to Recommendations</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -42,6 +42,9 @@
                     <th>Posted Date</th>
                     <th>Status</th>
                     <th>Actions</th>
+                    {% if user.usertype.is_job_seeker %}
+                    <th>AI Match</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -90,6 +93,16 @@
                             </a>
                         </div>
                     </td>
+                    {% if user.usertype.is_job_seeker %}
+                    <td>
+                        <button class="button is-purple analyze-match-btn" data-job-id="{{ job.id }}">
+                            <span class="icon">
+                                <i class="fas fa-brain"></i>
+                            </span>
+                            <span>AI Match</span>
+                        </button>
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -102,7 +115,126 @@
     {% endif %}
 </div>
 
-<!-- JavaScript for updating job status -->
+<!-- AI Match Analysis Modal -->
+<div id="match-analysis-modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">AI Resume-Job Match Analysis</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div id="loading-indicator" class="has-text-centered">
+                <p class="mb-4">Analyzing your resume against this job description...</p>
+                <progress class="progress is-purple" max="100"></progress>
+            </div>
+            <div id="analysis-results" style="display: none;">
+                <div class="columns">
+                    <div class="column is-4">
+                        <div class="box has-text-centered">
+                            <p class="heading">Match Score</p>
+                            <div class="match-score-circle">
+                                <span id="match-score">0</span><span>%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-8">
+                        <div class="box">
+                            <p class="heading">Overall Assessment</p>
+                            <p id="overall-assessment"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="box">
+                            <p class="heading">Matching Skills</p>
+                            <div class="tags" id="matching-skills"></div>
+                        </div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="box">
+                            <p class="heading">Missing Skills</p>
+                            <div class="tags" id="missing-skills"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="box">
+                            <p class="heading">Experience Match</p>
+                            <p id="experience-match"></p>
+                        </div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="box">
+                            <p class="heading">Education Match</p>
+                            <p id="education-match"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box">
+                    <p class="heading">Improvement Suggestions</p>
+                    <p id="improvement-suggestions"></p>
+                </div>
+            </div>
+            <div id="analysis-error" class="notification is-danger" style="display: none;">
+                <p>There was an error analyzing your resume. Please try again later.</p>
+            </div>
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-purple close-modal">Close</button>
+        </footer>
+    </div>
+</div>
+
+<style>
+    .button.is-purple {
+        background-color: #8A4D76;
+        color: white;
+    }
+
+    .button.is-purple:hover {
+        background-color: #7A3D66;
+    }
+
+    .progress.is-purple::-webkit-progress-value {
+        background-color: #8A4D76;
+    }
+
+    .progress.is-purple::-moz-progress-bar {
+        background-color: #8A4D76;
+    }
+
+    .progress.is-purple::-ms-fill {
+        background-color: #8A4D76;
+    }
+
+    .match-score-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #8A4D76;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0 auto;
+    }
+
+    .heading {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #8A4D76;
+    }
+</style>
+
+<!-- JavaScript for updating job status and AI match analysis -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Job status update
@@ -154,6 +286,205 @@
                 });
             });
         });
+
+        // AI Match Analysis
+        try {
+            console.log('Initializing AI Match Analysis...');
+            const modal = document.getElementById('match-analysis-modal');
+            console.log('Modal element:', modal);
+
+            const analyzeButtons = document.querySelectorAll('.analyze-match-btn');
+            console.log('Analyze buttons found:', analyzeButtons.length);
+
+            const closeButtons = document.querySelectorAll('.delete, .close-modal');
+
+            // Get the content sections
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const analysisResults = document.getElementById('analysis-results');
+            const analysisError = document.getElementById('analysis-error');
+
+            let currentJobId = null;
+
+        // Open the modal when an analyze button is clicked
+        analyzeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Get the job ID from the data attribute
+                currentJobId = this.dataset.jobId;
+                console.log('Button clicked for job ID:', currentJobId);
+
+                if (!currentJobId) {
+                    console.error('Could not get job ID from data attribute');
+                    return;
+                }
+
+                // Show the modal
+                modal.classList.add('is-active');
+
+                // Show loading, hide results and error
+                loadingIndicator.style.display = 'block';
+                analysisResults.style.display = 'none';
+                analysisError.style.display = 'none';
+
+                const apiUrl = '{% url "analyze_job_match" 0 %}'.replace('0', currentJobId);
+                console.log('Making API call to:', apiUrl);
+
+                // Make the API call to analyze the match
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API response:', data);
+                    if (data.status === 'processing') {
+                        // Start polling for results
+                        pollJobMatchStatus();
+                    } else if (data.status === 'success') {
+                        displayResults(data.result);
+                    } else {
+                        // Show error
+                        showError(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError();
+                });
+            });
+        });
+
+        // Function to display results
+        function displayResults(result) {
+            // Hide loading
+            loadingIndicator.style.display = 'none';
+
+            // Show results
+            analysisResults.style.display = 'block';
+
+            // Update match score
+            document.getElementById('match-score').textContent = result.match_score;
+
+            // Update overall assessment
+            document.getElementById('overall-assessment').textContent = result.overall_assessment;
+
+            // Update matching skills
+            const matchingSkillsContainer = document.getElementById('matching-skills');
+            matchingSkillsContainer.innerHTML = '';
+            result.matching_skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.className = 'tag is-success';
+                tag.textContent = skill;
+                matchingSkillsContainer.appendChild(tag);
+            });
+
+            // Update missing skills
+            const missingSkillsContainer = document.getElementById('missing-skills');
+            missingSkillsContainer.innerHTML = '';
+            result.missing_skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.className = 'tag is-danger';
+                tag.textContent = skill;
+                missingSkillsContainer.appendChild(tag);
+            });
+
+            // Update experience match
+            document.getElementById('experience-match').textContent = result.experience_match;
+
+            // Update education match
+            document.getElementById('education-match').textContent = result.education_match;
+
+            // Update improvement suggestions
+            document.getElementById('improvement-suggestions').textContent = result.improvement_suggestions;
+        }
+
+        // Function to show error
+        function showError(message) {
+            // Hide loading
+            loadingIndicator.style.display = 'none';
+
+            // Show error
+            analysisError.style.display = 'block';
+            analysisError.querySelector('p').textContent = message || 'There was an error analyzing your resume. Please try again later.';
+        }
+
+        // Function to poll for job match status
+        function pollJobMatchStatus() {
+            let pollCount = 0;
+            const maxPolls = 120; // Maximum number of polling attempts (120 * 1 second = 2 minutes)
+
+            const pollInterval = setInterval(() => {
+                pollCount++;
+
+                // Check if we've reached the maximum number of polls
+                if (pollCount > maxPolls) {
+                    clearInterval(pollInterval);
+                    showError('The analysis is taking longer than expected. Please try again later.');
+                    return;
+                }
+
+                // Update the loading message to show progress
+                const loadingText = document.querySelector('#loading-indicator p');
+                loadingText.textContent = `Analyzing your resume against this job description... (${pollCount}s)`;
+
+                // Update the progress bar
+                const progressBar = document.querySelector('#loading-indicator progress');
+                progressBar.value = Math.min(pollCount, 90);
+
+                // Make API call to check status
+                fetch(`/job-listings/${currentJobId}/analyze-match/?check_status=true`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => {
+                    console.log('Poll response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Poll API response:', data);
+                    if (data.status === 'success') {
+                        // Analysis completed
+                        clearInterval(pollInterval);
+                        displayResults(data.result);
+                    } else if (data.status === 'error') {
+                        // Error occurred
+                        clearInterval(pollInterval);
+                        showError(data.message);
+                    }
+                    // If status is 'processing', continue polling
+                })
+                .catch(error => {
+                    console.error('Error polling for status:', error);
+                    // Don't stop polling on network errors, just log them
+                });
+            }, 1000); // Poll every second
+        }
+
+        // Close the modal when the close button is clicked
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modal.classList.remove('is-active');
+            });
+        });
+
+        // Close the modal when clicking outside the modal content
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('is-active');
+            }
+        });
+
+        } catch (error) {
+            console.error('Error in AI Match Analysis setup:', error);
+        }
 
         // Function to get CSRF token from cookies
         function getCookie(name) {
