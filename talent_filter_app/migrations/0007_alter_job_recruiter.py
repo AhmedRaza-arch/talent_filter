@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("talent_filter_app", "0006_alter_job_recruiter_jobmatchanalysis"),
+        ("talent_filter_app", "0006_fix_job_recruiter"),
     ]
 
     operations = [

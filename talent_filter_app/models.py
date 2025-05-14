@@ -212,26 +212,7 @@ class Notification(models.Model):
     def __str__(self):
         return f"{self.notification_type} notification for {self.recipient.username}"
 
-class JobMatchAnalysis(models.Model):
-    """Model to track job match analysis requests and their status"""
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    )
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    result = models.JSONField(null=True, blank=True)
-    error_message = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('user', 'job')
-        ordering = ['-updated_at']
+# JobMatchAnalysis model is defined below (removed duplicate definition)
 
 class CandidateRecommendation(models.Model):
     """Model to store AI-generated candidate recommendations for jobs"""
